@@ -397,7 +397,7 @@ try {
             'n' => "365",
             'n2' => "365"
         ));
-        addFieldToTable("marzban_panel", "version_panel", "1", "VARCHAR(60)");
+        addFieldToTable("marzban_panel", "version_panel", "0", "VARCHAR(60)");
         addFieldToTable("marzban_panel", "on_hold_test", "1", "VARCHAR(60)");
         addFieldToTable("marzban_panel", "proxies", null, "TEXT");
         addFieldToTable("marzban_panel", "inbounds", null, "TEXT");
