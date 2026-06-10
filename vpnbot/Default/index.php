@@ -194,8 +194,8 @@ if ($text == "/start") {
     $keyboardlists = [
         'inline_keyboard' => [],
     ];
-    $stmt = $pdo->prepare("SELECT * FROM invoice WHERE id_user = '$from_id' AND (status = 'active' OR status = 'end_of_time'  OR status = 'end_of_volume' OR status = 'sendedwarn' OR status = 'send_on_hold') AND bottype = '$ApiToken' ORDER BY time_sell DESC LIMIT $start_index, $items_per_page");
-    $stmt->execute();
+    $stmt = $pdo->prepare("SELECT * FROM invoice WHERE id_user = :mp1 AND (status = 'active' OR status = 'end_of_time'  OR status = 'end_of_volume' OR status = 'sendedwarn' OR status = 'send_on_hold') AND bottype = :mp2 ORDER BY time_sell DESC LIMIT :mp3, :mp4");
+    $stmt->execute([':mp1' => $from_id, ':mp2' => $ApiToken, ':mp3' => $start_index, ':mp4' => $items_per_page]);
     while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
         $data = "";
         if ($row != null)
@@ -245,8 +245,8 @@ if ($text == "/start") {
     $keyboardlists = [
         'inline_keyboard' => [],
     ];
-    $stmt = $pdo->prepare("SELECT * FROM invoice WHERE id_user = '$from_id' AND (status = 'active' OR status = 'end_of_time'  OR status = 'end_of_volume' OR status = 'sendedwarn' OR status = 'send_on_hold') AND bottype = '$ApiToken' ORDER BY time_sell DESC LIMIT $start_index, $items_per_page");
-    $stmt->execute();
+    $stmt = $pdo->prepare("SELECT * FROM invoice WHERE id_user = :mp5 AND (status = 'active' OR status = 'end_of_time'  OR status = 'end_of_volume' OR status = 'sendedwarn' OR status = 'send_on_hold') AND bottype = :mp6 ORDER BY time_sell DESC LIMIT :mp7, :mp8");
+    $stmt->execute([':mp5' => $from_id, ':mp6' => $ApiToken, ':mp7' => $start_index, ':mp8' => $items_per_page]);
     while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
         $keyboardlists['inline_keyboard'][] = [
             [
@@ -294,8 +294,8 @@ if ($text == "/start") {
     $keyboardlists = [
         'inline_keyboard' => [],
     ];
-    $stmt = $pdo->prepare("SELECT * FROM invoice WHERE id_user = '$from_id' AND (status = 'active' OR status = 'end_of_time'  OR status = 'end_of_volume' OR status = 'sendedwarn' OR status = 'send_on_hold') AND bottype = '$ApiToken' ORDER BY time_sell DESC LIMIT $start_index, $items_per_page");
-    $stmt->execute();
+    $stmt = $pdo->prepare("SELECT * FROM invoice WHERE id_user = :mp9 AND (status = 'active' OR status = 'end_of_time'  OR status = 'end_of_volume' OR status = 'sendedwarn' OR status = 'send_on_hold') AND bottype = :mp10 ORDER BY time_sell DESC LIMIT :mp11, :mp12");
+    $stmt->execute([':mp9' => $from_id, ':mp10' => $ApiToken, ':mp11' => $start_index, ':mp12' => $items_per_page]);
     while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
         $keyboardlists['inline_keyboard'][] = [
             [
@@ -587,7 +587,9 @@ if ($text == $text_bot_var['btn_keyboard']['buy'] && $setting['active_step_note'
     step("statusnamecustom", $from_id);
     return;
 } elseif ($text == $text_bot_var['btn_keyboard']['buy'] || $user['step'] == "statusnamecustom") {
-    $locationproduct = $pdo->query("SELECT * FROM marzban_panel  WHERE status = 'active' AND (agent = '{$userbot['agent']}' OR agent = 'all')");
+    $locationproduct = $pdo->prepare("SELECT * FROM marzban_panel  WHERE status = 'active' AND (agent = ? OR agent = 'all')");
+    $locationproduct->bindValue(1, $userbot['agent'], PDO::PARAM_STR);
+    $locationproduct->execute();
     if (($locationproduct)->rowCount() == 0) {
         sendmessage($from_id, $textbotlang['Admin']['managepanel']['nullpanel'], null, 'HTML');
         return;
@@ -689,8 +691,8 @@ if ($text == $text_bot_var['btn_keyboard']['buy'] && $setting['active_step_note'
     } else {
         savedata("clear", "name_panel", $locationproduct['name_panel']);
     }
-    $stmt = $pdo->prepare("SELECT * FROM invoice WHERE (status = 'active' OR status = 'end_of_time' OR status = 'end_of_volume' OR status = 'sendedwarn' OR Status = 'send_on_hold') AND  Service_location = '{$locationproduct['name_panel']}'");
-    $stmt->execute();
+    $stmt = $pdo->prepare("SELECT * FROM invoice WHERE (status = 'active' OR status = 'end_of_time' OR status = 'end_of_volume' OR status = 'sendedwarn' OR Status = 'send_on_hold') AND  Service_location = :mp13");
+    $stmt->execute([':mp13' => $locationproduct['name_panel']]);
     $countinovoice = $stmt->rowCount();
     if ($locationproduct['limit_panel'] != "unlimited") {
         if ($countinovoice >= $locationproduct['limit_panel']) {

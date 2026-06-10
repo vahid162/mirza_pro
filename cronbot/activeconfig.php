@@ -11,8 +11,8 @@ $ManagePanel = new ManagePanel();
 $stmt = $pdo->prepare("SELECT id FROM user WHERE checkstatus = '1' ORDER BY RAND() LIMIT 10");
 $stmt->execute();
 while ($result = $stmt->fetch(PDO::FETCH_ASSOC)) {
-        $stmts = $pdo->prepare("SELECT * FROM invoice WHERE id_user = '{$result['id']}' AND Status = 'disablebyadmin'  ORDER BY RAND() LIMIT 10");
-        $stmts->execute();
+        $stmts = $pdo->prepare("SELECT * FROM invoice WHERE id_user = :mp1 AND Status = 'disablebyadmin'  ORDER BY RAND() LIMIT 10");
+        $stmts->execute([':mp1' => $result['id']]);
         $selectinvoice = $stmts->fetchAll();
         if($stmts->rowCount() == 0){
             update("user","checkstatus","0","id",$result['id']);

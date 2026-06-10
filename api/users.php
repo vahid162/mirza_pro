@@ -200,9 +200,9 @@ switch ($data['actions'] ?? '') {
                     ]
                 ]);
             }
-            $stmt = $pdo->prepare("SELECT SUM(price_product) as sum_price,COUNT(username) as count_invoice FROM invoice WHERE name_product != '{$textbotlang['Admin']['adminphp']['db_test_service_name']}' AND  id_user = :user_id AND Status != 'Unpaid'");
+            $stmt = $pdo->prepare("SELECT SUM(price_product) as sum_price,COUNT(username) as count_invoice FROM invoice WHERE name_product != :mp1 AND  id_user = :user_id AND Status != 'Unpaid'");
             $stmt->bindValue(':user_id', intval($users[0]['user_id']), PDO::PARAM_INT);
-            $stmt->execute();
+            $stmt->execute([':mp1' => $textbotlang['Admin']['adminphp']['db_test_service_name']]);
             $invoice = $stmt->fetch(PDO::FETCH_ASSOC);
             $users[0]['count_invoice'] = $invoice['count_invoice'];
             $users[0]['sum_invoice'] = $invoice['sum_price'];

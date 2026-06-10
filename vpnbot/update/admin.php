@@ -238,14 +238,33 @@ if ($text == "📞 تنظیم نام کاربری پشتیبانی") {
         return;
     }
     $date = date("Y-m-d");
-    $dayListSell = ($pdo->query("SELECT COUNT(*) FROM invoice WHERE (status = 'active' OR status = 'end_of_time'  OR status = 'end_of_volume' OR status = 'sendedwarn' OR Status = 'send_on_hold') AND id_user = '$id_user' AND bottype = '$ApiToken'"))->fetch(PDO::FETCH_ASSOC);
-    $balanceall = ($pdo->query("SELECT SUM(price) FROM Payment_report WHERE payment_Status = 'paid' AND id_user = '$id_user' AND Payment_Method != 'low balance by admin' AND bottype = '$ApiToken'"))->fetch(PDO::FETCH_ASSOC);
-    $subbuyuser = ($pdo->query("SELECT SUM(price_product) FROM invoice WHERE (status = 'active' OR status = 'end_of_time'  OR status = 'end_of_volume' OR status = 'sendedwarn' OR Status = 'send_on_hold') AND id_user = '$id_user' AND bottype = '$ApiToken'"))->fetch(PDO::FETCH_ASSOC);
-    $invoicecount = ($pdo->query("SELECT count(*) FROM invoice WHERE (status = 'active' OR status = 'end_of_time'  OR status = 'end_of_volume' OR status = 'sendedwarn' OR Status = 'send_on_hold') AND id_user = '$id_user' AND bottype = '$ApiToken'"))->fetch(PDO::FETCH_ASSOC)['count(*)'];
+    $__q28 = $pdo->prepare("SELECT COUNT(*) FROM invoice WHERE (status = 'active' OR status = 'end_of_time'  OR status = 'end_of_volume' OR status = 'sendedwarn' OR Status = 'send_on_hold') AND id_user = ? AND bottype = ?");
+    $__q28->bindValue(1, $id_user, PDO::PARAM_STR);
+    $__q28->bindValue(2, $ApiToken, PDO::PARAM_STR);
+    $__q28->execute();
+    $dayListSell = $__q28->fetch(PDO::FETCH_ASSOC);
+    $__q29 = $pdo->prepare("SELECT SUM(price) FROM Payment_report WHERE payment_Status = 'paid' AND id_user = ? AND Payment_Method != 'low balance by admin' AND bottype = ?");
+    $__q29->bindValue(1, $id_user, PDO::PARAM_STR);
+    $__q29->bindValue(2, $ApiToken, PDO::PARAM_STR);
+    $__q29->execute();
+    $balanceall = $__q29->fetch(PDO::FETCH_ASSOC);
+    $__q30 = $pdo->prepare("SELECT SUM(price_product) FROM invoice WHERE (status = 'active' OR status = 'end_of_time'  OR status = 'end_of_volume' OR status = 'sendedwarn' OR Status = 'send_on_hold') AND id_user = ? AND bottype = ?");
+    $__q30->bindValue(1, $id_user, PDO::PARAM_STR);
+    $__q30->bindValue(2, $ApiToken, PDO::PARAM_STR);
+    $__q30->execute();
+    $subbuyuser = $__q30->fetch(PDO::FETCH_ASSOC);
+    $__q31 = $pdo->prepare("SELECT count(*) FROM invoice WHERE (status = 'active' OR status = 'end_of_time'  OR status = 'end_of_volume' OR status = 'sendedwarn' OR Status = 'send_on_hold') AND id_user = ? AND bottype = ?");
+    $__q31->bindValue(1, $id_user, PDO::PARAM_STR);
+    $__q31->bindValue(2, $ApiToken, PDO::PARAM_STR);
+    $__q31->execute();
+    $invoicecount = $__q31->fetch(PDO::FETCH_ASSOC)['count(*)'];
     if ($invoicecount == 0) {
         $sumvolume['SUM(Volume)'] = 0;
     } else {
-        $sumvolume = ($pdo->query("SELECT SUM(Volume) FROM invoice WHERE (status = 'active' OR status = 'end_of_time'  OR status = 'end_of_volume' OR status = 'sendedwarn' OR Status = 'send_on_hold') AND id_user = '$id_user' AND name_product != 'سرویس تست'"))->fetch(PDO::FETCH_ASSOC);
+        $__q32 = $pdo->prepare("SELECT SUM(Volume) FROM invoice WHERE (status = 'active' OR status = 'end_of_time'  OR status = 'end_of_volume' OR status = 'sendedwarn' OR Status = 'send_on_hold') AND id_user = ? AND name_product != 'سرویس تست'");
+        $__q32->bindValue(1, $id_user, PDO::PARAM_STR);
+        $__q32->execute();
+        $sumvolume = $__q32->fetch(PDO::FETCH_ASSOC);
     }
     $user = select("user", "*", "id", $id_user, "select");
     $roll_Status = [
@@ -399,11 +418,11 @@ if ($text == "📞 تنظیم نام کاربری پشتیبانی") {
     $Balance_user_afters = number_format(select("user", "*", "id", $user['Processing_value'], "select")['Balance']);
 } elseif ($text == "📊 آمار ربات") {
     $statistics = select("user", "*", "bottype", $ApiToken, "count");
-    $stmt2 = $pdo->prepare("SELECT COUNT( DISTINCT id_user) as count FROM `invoice` WHERE name_product = 'سرویس تست' AND  bottype = '$ApiToken'");
-    $stmt2->execute();
+    $stmt2 = $pdo->prepare("SELECT COUNT( DISTINCT id_user) as count FROM `invoice` WHERE name_product = 'سرویس تست' AND  bottype = :mp1");
+    $stmt2->execute([':mp1' => $ApiToken]);
     $statisticsorder = $stmt2->fetch(PDO::FETCH_ASSOC)['count'];
-    $stmt = $pdo->prepare("SELECT * FROM invoice WHERE name_product = 'سرویس تست' AND bottype = '$ApiToken'");
-    $stmt->execute();
+    $stmt = $pdo->prepare("SELECT * FROM invoice WHERE name_product = 'سرویس تست' AND bottype = :mp2");
+    $stmt->execute([':mp2' => $ApiToken]);
     $count_usertest = $stmt->rowCount();
     $sql1 = "SELECT COUNT(*) AS invoice_count FROM invoice WHERE (status = 'active' OR status = 'end_of_time' OR status = 'end_of_volume' OR status = 'sendedwarn' OR status = 'send_on_hold') AND name_product != 'سرویس تست' AND bottype = '$ApiToken'";
     $stmt1 = $pdo->query($sql1);
@@ -426,7 +445,9 @@ if ($text == "📞 تنظیم نام کاربری پشتیبانی") {
         file_put_contents('product.json', "{}");
     }
     $product = [];
-    $getdataproduct = $pdo->query("SELECT * FROM product WHERE agent = '{$userbot['agent']}'");
+    $getdataproduct = $pdo->prepare("SELECT * FROM product WHERE agent = ?");
+    $getdataproduct->bindValue(1, $userbot['agent'], PDO::PARAM_STR);
+    $getdataproduct->execute();
     while ($row = ($getdataproduct)->fetch(PDO::FETCH_ASSOC)) {
         $panel = select("marzban_panel", "*", "name_panel", $row['Location'], "select");
         if (in_array($panel['name_panel'], $hide_panel))
@@ -633,7 +654,9 @@ if ($text == "📞 تنظیم نام کاربری پشتیبانی") {
         file_put_contents('product_name.json', "{}");
     }
     $product = [];
-    $getdataproduct = $pdo->query("SELECT * FROM product WHERE agent = '{$userbot['agent']}'");
+    $getdataproduct = $pdo->prepare("SELECT * FROM product WHERE agent = ?");
+    $getdataproduct->bindValue(1, $userbot['agent'], PDO::PARAM_STR);
+    $getdataproduct->execute();
     while ($row = ($getdataproduct)->fetch(PDO::FETCH_ASSOC)) {
         $panel = select("marzban_panel", "*", "name_panel", $row['Location'], "select");
         if (in_array($panel['name_panel'], $hide_panel))

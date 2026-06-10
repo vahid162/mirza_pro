@@ -6,8 +6,8 @@ require_once __DIR__ . '/../panels.php';
 require_once __DIR__ . '/../function.php';
 $ManagePanel = new ManagePanel();
 $textbotlang = languagechange();
-        $stmt = $pdo->prepare("SELECT * FROM invoice WHERE status != 'disabled' AND name_product = '{$textbotlang['Admin']['adminphp']['db_test_service_name']}' ORDER BY RAND() LIMIT 15");
-        $stmt->execute();
+        $stmt = $pdo->prepare("SELECT * FROM invoice WHERE status != 'disabled' AND name_product = :mp1 ORDER BY RAND() LIMIT 15");
+        $stmt->execute([':mp1' => $textbotlang['Admin']['adminphp']['db_test_service_name']]);
         while ($result = $stmt->fetch(PDO::FETCH_ASSOC)) {
         $resultt  = trim($result['username']);
         $marzban_list_get = select("marzban_panel","*","name_panel",$result['Service_location'],"select");

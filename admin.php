@@ -1129,9 +1129,9 @@ elseif ($datain == "systemsms") {
                     $stmt = $pdo->prepare("SELECT u.id FROM user u WHERE EXISTS ( SELECT 1 FROM invoice i WHERE i.id_user = u.id) AND u.User_Status = 'Active'");
                 } else {
                     $panel = select("marzban_panel", "*", "code_panel", $userdata['selectpanel'], "select");
-                    $stmt = $pdo->prepare("SELECT u.id FROM user u WHERE EXISTS ( SELECT 1 FROM invoice i WHERE i.id_user = u.id AND i.Service_location = '{$panel['name_panel']}') AND u.User_Status = 'Active'");
+                    $stmt = $pdo->prepare("SELECT u.id FROM user u WHERE EXISTS ( SELECT 1 FROM invoice i WHERE i.id_user = u.id AND i.Service_location = :mp1) AND u.User_Status = 'Active'");
                 }
-                $stmt->execute();
+                $stmt->execute([':mp1' => $panel['name_panel']]);
                 $userslist = json_encode($stmt->fetchAll());
             } elseif ($typeusermessage == "nonecustomer") {
                 $stmt = $pdo->prepare("SELECT u.id FROM user u WHERE NOT EXISTS ( SELECT 1 FROM invoice i WHERE i.id_user = u.id) AND u.User_Status = 'Active'");
@@ -1146,10 +1146,10 @@ elseif ($datain == "systemsms") {
                     $stmt = $pdo->prepare("SELECT u.id FROM user u WHERE u.agent =  :agent AND EXISTS ( SELECT 1 FROM invoice i WHERE i.id_user = u.id) AND u.User_Status = 'Active'");
                 } else {
                     $panel = select("marzban_panel", "*", "code_panel", $userdata['selectpanel'], "select");
-                    $stmt = $pdo->prepare("SELECT u.id FROM user u WHERE  u.agent =  :agent AND EXISTS ( SELECT 1 FROM invoice i WHERE i.id_user = u.id AND i.Service_location = '{$panel['name_panel']}') AND u.User_Status = 'Active'");
+                    $stmt = $pdo->prepare("SELECT u.id FROM user u WHERE  u.agent =  :agent AND EXISTS ( SELECT 1 FROM invoice i WHERE i.id_user = u.id AND i.Service_location = :mp2) AND u.User_Status = 'Active'");
                 }
                 $stmt->bindParam(':agent', $agent, PDO::PARAM_STR);
-                $stmt->execute();
+                $stmt->execute([':mp2' => $panel['name_panel']]);
                 $userslist = json_encode($stmt->fetchAll());
             } elseif ($typeusermessage == "nonecustomer") {
                 $stmt = $pdo->prepare("SELECT u.id FROM user u WHERE u.agent =  :agent AND NOT EXISTS ( SELECT 1 FROM invoice i WHERE i.id_user = u.id) AND u.User_Status = 'Active'");
@@ -1178,9 +1178,9 @@ elseif ($datain == "systemsms") {
                     $stmt = $pdo->prepare("SELECT u.id FROM user u WHERE EXISTS ( SELECT 1 FROM invoice i WHERE i.id_user = u.id) AND u.User_Status = 'Active'");
                 } else {
                     $panel = select("marzban_panel", "*", "code_panel", $userdata['selectpanel'], "select");
-                    $stmt = $pdo->prepare("SELECT u.id FROM user u WHERE EXISTS ( SELECT 1 FROM invoice i WHERE i.id_user = u.id AND i.Service_location = '{$panel['name_panel']}') AND u.User_Status = 'Active'");
+                    $stmt = $pdo->prepare("SELECT u.id FROM user u WHERE EXISTS ( SELECT 1 FROM invoice i WHERE i.id_user = u.id AND i.Service_location = :mp3) AND u.User_Status = 'Active'");
                 }
-                $stmt->execute();
+                $stmt->execute([':mp3' => $panel['name_panel']]);
                 $userslist = json_encode($stmt->fetchAll());
             } elseif ($typeusermessage == "nonecustomer") {
                 $stmt = $pdo->prepare("SELECT u.id FROM user u WHERE NOT EXISTS ( SELECT 1 FROM invoice i WHERE i.id_user = u.id) AND u.User_Status = 'Active'");
@@ -1195,10 +1195,10 @@ elseif ($datain == "systemsms") {
                     $stmt = $pdo->prepare("SELECT u.id FROM user u WHERE u.agent =  :agent AND EXISTS ( SELECT 1 FROM invoice i WHERE i.id_user = u.id) AND u.User_Status = 'Active'");
                 } else {
                     $panel = select("marzban_panel", "*", "code_panel", $userdata['selectpanel'], "select");
-                    $stmt = $pdo->prepare("SELECT u.id FROM user u WHERE u.agent =  :agent AND EXISTS ( SELECT 1 FROM invoice i WHERE i.id_user = u.id AND i.Service_location = '{$panel['name_panel']}') AND u.User_Status = 'Active'");
+                    $stmt = $pdo->prepare("SELECT u.id FROM user u WHERE u.agent =  :agent AND EXISTS ( SELECT 1 FROM invoice i WHERE i.id_user = u.id AND i.Service_location = :mp4) AND u.User_Status = 'Active'");
                 }
                 $stmt->bindParam(':agent', $agent, PDO::PARAM_STR);
-                $stmt->execute();
+                $stmt->execute([':mp4' => $panel['name_panel']]);
                 $userslist = json_encode($stmt->fetchAll());
             } elseif ($typeusermessage == "nonecustomer") {
                 $stmt = $pdo->prepare("SELECT u.id FROM user u WHERE u.agent =  :agent AND NOT EXISTS ( SELECT 1 FROM invoice i WHERE i.id_user = u.id) AND u.User_Status = 'Active'");
@@ -1236,10 +1236,10 @@ elseif ($datain == "systemsms") {
                         $stmt = $pdo->prepare("SELECT u.id FROM user u WHERE u.last_message_time < :time AND EXISTS ( SELECT 1 FROM invoice i WHERE i.id_user = u.id);");
                     } else {
                         $panel = select("marzban_panel", "*", "code_panel", $userdata['selectpanel'], "select");
-                        $stmt = $pdo->prepare("SELECT u.id FROM user u WHERE u.last_message_time < :time AND EXISTS ( SELECT 1 FROM invoice i WHERE i.id_user = u.id AND i.Service_location = '{$panel['name_panel']}');");
+                        $stmt = $pdo->prepare("SELECT u.id FROM user u WHERE u.last_message_time < :time AND EXISTS ( SELECT 1 FROM invoice i WHERE i.id_user = u.id AND i.Service_location = :mp5);");
                     }
                     $stmt->bindParam(':time', $timenouser, PDO::PARAM_STR);
-                    $stmt->execute();
+                    $stmt->execute([':mp5' => $panel['name_panel']]);
                     $userslist = json_encode($stmt->fetchAll());
                 } elseif ($typeusermessage == "nonecustomer") {
                     $stmt = $pdo->prepare("SELECT u.id FROM user u WHERE u.last_message_time < :time AND NOT EXISTS ( SELECT 1 FROM invoice i WHERE i.id_user = u.id);");
@@ -1252,11 +1252,11 @@ elseif ($datain == "systemsms") {
                     $stmt = $pdo->prepare("SELECT u.id FROM user u WHERE u.agent =  :agent AND u.last_message_time < :time AND EXISTS ( SELECT 1 FROM invoice i WHERE i.id_user = u.id);");
                 } else {
                     $panel = select("marzban_panel", "*", "code_panel", $userdata['selectpanel'], "select");
-                    $stmt = $pdo->prepare("SELECT u.id FROM user u WHERE u.agent =  :agent AND u.last_message_time < :time AND EXISTS ( SELECT 1 FROM invoice i WHERE i.id_user = u.id AND i.Service_location = '{$panel['name_panel']}');");
+                    $stmt = $pdo->prepare("SELECT u.id FROM user u WHERE u.agent =  :agent AND u.last_message_time < :time AND EXISTS ( SELECT 1 FROM invoice i WHERE i.id_user = u.id AND i.Service_location = :mp6);");
                 }
                 $stmt->bindParam(':agent', $agent, PDO::PARAM_STR);
                 $stmt->bindParam(':time', $timenouser, PDO::PARAM_STR);
-                $stmt->execute();
+                $stmt->execute([':mp6' => $panel['name_panel']]);
                 $userslist = json_encode($stmt->fetchAll());
             } elseif ($typeusermessage == "nonecustomer") {
                 $stmt = $pdo->prepare("SELECT u.id FROM user u WHERE u.agent =  :agent AND u.last_message_time < :time AND NOT EXISTS ( SELECT 1 FROM invoice i WHERE i.id_user = u.id);");
@@ -2815,7 +2815,10 @@ elseif ($datain == "systemsms") {
     update("user", "Processing_value_tow", $typeagent, "id", $from_id);
     $product = [];
     $panel = select("marzban_panel", "*", "code_panel", $user['Processing_value_one'], "select");
-    $getdataproduct = $pdo->query("SELECT * FROM product WHERE (Location = '{$panel['name_panel']}' or Location = '/all') AND agent = '$typeagent'");
+    $getdataproduct = $pdo->prepare("SELECT * FROM product WHERE (Location = ? or Location = '/all') AND agent = ?");
+    $getdataproduct->bindValue(1, $panel['name_panel'], PDO::PARAM_STR);
+    $getdataproduct->bindValue(2, $typeagent, PDO::PARAM_STR);
+    $getdataproduct->execute();
     $list_product = [
         'inline_keyboard' => [],
     ];
@@ -2837,7 +2840,12 @@ elseif ($datain == "systemsms") {
     deletemessage($from_id, $message_id);
     update("user", "Processing_value", $id_product, "id", $from_id);
     $panel = select("marzban_panel", "*", "code_panel", $user['Processing_value_one'], "select");
-    $info_product = ($pdo->query("SELECT * FROM product WHERE id = '$id_product'  AND agent = '{$user['Processing_value_tow']}' AND (Location = '{$panel['name_panel']}' OR Location = '/all') LIMIT 1"))->fetch(PDO::FETCH_ASSOC);
+    $__q36 = $pdo->prepare("SELECT * FROM product WHERE id = ?  AND agent = ? AND (Location = ? OR Location = '/all') LIMIT 1");
+    $__q36->bindValue(1, $id_product, PDO::PARAM_STR);
+    $__q36->bindValue(2, $user['Processing_value_tow'], PDO::PARAM_STR);
+    $__q36->bindValue(3, $panel['name_panel'], PDO::PARAM_STR);
+    $__q36->execute();
+    $info_product = $__q36->fetch(PDO::FETCH_ASSOC);
     $count_invoice = select("invoice", "*", "name_product", $info_product['name_product'], "count");
     $infoproduct = sprintf($textbotlang['Admin']['adminphp']['msg_user_price_volume'], $info_product['name_product'], $info_product['price_product'], $info_product['Volume_constraint'], $info_product['Location'], $info_product['Service_time'], $info_product['agent'], $info_product['data_limit_reset'], $info_product['note'], $info_product['category'], $count_invoice);
     sendmessage($from_id, $infoproduct, $change_product, 'HTML');
@@ -3155,14 +3163,27 @@ elseif ($datain == "systemsms") {
         return;
     }
     $date = date("Y-m-d");
-    $dayListSell = ($pdo->query("SELECT COUNT(*) FROM invoice WHERE (status = 'active' OR status = 'end_of_time'  OR status = 'end_of_volume' OR status = 'sendedwarn' OR Status = 'send_on_hold') AND id_user = '$id_user'"))->fetch(PDO::FETCH_ASSOC);
-    $balanceall = ($pdo->query("SELECT SUM(price) FROM Payment_report WHERE payment_Status = 'paid' AND id_user = '$id_user' AND Payment_Method != 'low balance by admin'"))->fetch(PDO::FETCH_ASSOC);
-    $subbuyuser = ($pdo->query("SELECT SUM(price_product) FROM invoice WHERE (status = 'active' OR status = 'end_of_time'  OR status = 'end_of_volume' OR status = 'sendedwarn' OR Status = 'send_on_hold') AND id_user = '$id_user'"))->fetch(PDO::FETCH_ASSOC);
+    $__q37 = $pdo->prepare("SELECT COUNT(*) FROM invoice WHERE (status = 'active' OR status = 'end_of_time'  OR status = 'end_of_volume' OR status = 'sendedwarn' OR Status = 'send_on_hold') AND id_user = ?");
+    $__q37->bindValue(1, $id_user, PDO::PARAM_STR);
+    $__q37->execute();
+    $dayListSell = $__q37->fetch(PDO::FETCH_ASSOC);
+    $__q38 = $pdo->prepare("SELECT SUM(price) FROM Payment_report WHERE payment_Status = 'paid' AND id_user = ? AND Payment_Method != 'low balance by admin'");
+    $__q38->bindValue(1, $id_user, PDO::PARAM_STR);
+    $__q38->execute();
+    $balanceall = $__q38->fetch(PDO::FETCH_ASSOC);
+    $__q39 = $pdo->prepare("SELECT SUM(price_product) FROM invoice WHERE (status = 'active' OR status = 'end_of_time'  OR status = 'end_of_volume' OR status = 'sendedwarn' OR Status = 'send_on_hold') AND id_user = ?");
+    $__q39->bindValue(1, $id_user, PDO::PARAM_STR);
+    $__q39->execute();
+    $subbuyuser = $__q39->fetch(PDO::FETCH_ASSOC);
     $invoicecount = select("invoice", '*', "id_user", $id_user, "count");
     if ($invoicecount == 0) {
         $sumvolume['SUM(Volume)'] = 0;
     } else {
-        $sumvolume = ($pdo->query("SELECT SUM(Volume) FROM invoice WHERE (status = 'active' OR status = 'end_of_time'  OR status = 'end_of_volume' OR status = 'sendedwarn' OR Status = 'send_on_hold') AND id_user = '$id_user' AND name_product != '{$textbotlang['Admin']['adminphp']['db_test_service_name']}'"))->fetch(PDO::FETCH_ASSOC);
+        $__q40 = $pdo->prepare("SELECT SUM(Volume) FROM invoice WHERE (status = 'active' OR status = 'end_of_time'  OR status = 'end_of_volume' OR status = 'sendedwarn' OR Status = 'send_on_hold') AND id_user = ? AND name_product != ?");
+        $__q40->bindValue(1, $id_user, PDO::PARAM_STR);
+        $__q40->bindValue(2, $textbotlang['Admin']['adminphp']['db_test_service_name'], PDO::PARAM_STR);
+        $__q40->execute();
+        $sumvolume = $__q40->fetch(PDO::FETCH_ASSOC);
     }
     $user = select("user", "*", "id", $id_user, "select");
     $roll_Status = [
@@ -3480,8 +3501,16 @@ elseif ($datain == "systemsms") {
             $mem_total = formatBytes($System_Stats['mem_total']);
             $mem_used = formatBytes($System_Stats['mem_used']);
             $bandwidth = formatBytes($System_Stats['outgoing_bandwidth'] + $System_Stats['incoming_bandwidth']);
-            $ListSell = number_format(($pdo->query("SELECT COUNT(*) FROM invoice WHERE (status = 'active' OR status = 'end_of_time'  OR status = 'end_of_volume' OR status = 'sendedwarn' OR Status = 'send_on_hold') AND Service_location = '{$marzban_list_get['name_panel']}' AND name_product != '{$textbotlang['Admin']['adminphp']['db_test_service_name']}'"))->fetch(PDO::FETCH_ASSOC)['COUNT(*)'] ?? 0);
-            $ListSellSUM = number_format(($pdo->query("SELECT SUM(price_product) FROM invoice WHERE (status = 'active' OR status = 'end_of_time'  OR status = 'end_of_volume' OR status = 'sendedwarn' OR Status = 'send_on_hold') AND Service_location = '{$marzban_list_get['name_panel']}' AND name_product != '{$textbotlang['Admin']['adminphp']['db_test_service_name']}'"))->fetch(PDO::FETCH_ASSOC)['SUM(price_product)'] ?? 0);
+            $__q41 = $pdo->prepare("SELECT COUNT(*) FROM invoice WHERE (status = 'active' OR status = 'end_of_time'  OR status = 'end_of_volume' OR status = 'sendedwarn' OR Status = 'send_on_hold') AND Service_location = ? AND name_product != ?");
+            $__q41->bindValue(1, $marzban_list_get['name_panel'], PDO::PARAM_STR);
+            $__q41->bindValue(2, $textbotlang['Admin']['adminphp']['db_test_service_name'], PDO::PARAM_STR);
+            $__q41->execute();
+            $ListSell = number_format($__q41->fetch(PDO::FETCH_ASSOC)['COUNT(*)'] ?? 0);
+            $__q42 = $pdo->prepare("SELECT SUM(price_product) FROM invoice WHERE (status = 'active' OR status = 'end_of_time'  OR status = 'end_of_volume' OR status = 'sendedwarn' OR Status = 'send_on_hold') AND Service_location = ? AND name_product != ?");
+            $__q42->bindValue(1, $marzban_list_get['name_panel'], PDO::PARAM_STR);
+            $__q42->bindValue(2, $textbotlang['Admin']['adminphp']['db_test_service_name'], PDO::PARAM_STR);
+            $__q42->execute();
+            $ListSellSUM = number_format($__q42->fetch(PDO::FETCH_ASSOC)['SUM(price_product)'] ?? 0);
 
             $Condition_marzban = "";
             $text_marzban = sprintf($textbotlang['Admin']['adminphp']['ok_select_panel_user_1'], $total_user, $active_users, $System_Stats['version'], $mem_total, $mem_used, $bandwidth, $ListSell, $ListSellSUM, $marzban_list_get['agent']);
@@ -3592,8 +3621,16 @@ elseif ($datain == "systemsms") {
             $System_Stats = json_decode($System_Stats['body'], true);
             $active_users = $System_Stats['active'];
             $total_user = $System_Stats['total'];
-            $ListSell = number_format(($pdo->query("SELECT COUNT(*) FROM invoice WHERE (status = 'active' OR status = 'end_of_time'  OR status = 'end_of_volume' OR status = 'sendedwarn' OR Status = 'send_on_hold') AND Service_location = '{$marzban_list_get['name_panel']}' AND name_product != '{$textbotlang['Admin']['adminphp']['db_test_service_name']}'"))->fetch(PDO::FETCH_ASSOC)['COUNT(*)'] ?? 0);
-            $ListSellSUM = number_format(($pdo->query("SELECT SUM(price_product) FROM invoice WHERE (status = 'active' OR status = 'end_of_time'  OR status = 'end_of_volume' OR status = 'sendedwarn' OR Status = 'send_on_hold') AND Service_location = '{$marzban_list_get['name_panel']}' AND name_product != '{$textbotlang['Admin']['adminphp']['db_test_service_name']}'"))->fetch(PDO::FETCH_ASSOC)['SUM(price_product)'] ?? 0);
+            $__q43 = $pdo->prepare("SELECT COUNT(*) FROM invoice WHERE (status = 'active' OR status = 'end_of_time'  OR status = 'end_of_volume' OR status = 'sendedwarn' OR Status = 'send_on_hold') AND Service_location = ? AND name_product != ?");
+            $__q43->bindValue(1, $marzban_list_get['name_panel'], PDO::PARAM_STR);
+            $__q43->bindValue(2, $textbotlang['Admin']['adminphp']['db_test_service_name'], PDO::PARAM_STR);
+            $__q43->execute();
+            $ListSell = number_format($__q43->fetch(PDO::FETCH_ASSOC)['COUNT(*)'] ?? 0);
+            $__q44 = $pdo->prepare("SELECT SUM(price_product) FROM invoice WHERE (status = 'active' OR status = 'end_of_time'  OR status = 'end_of_volume' OR status = 'sendedwarn' OR Status = 'send_on_hold') AND Service_location = ? AND name_product != ?");
+            $__q44->bindValue(1, $marzban_list_get['name_panel'], PDO::PARAM_STR);
+            $__q44->bindValue(2, $textbotlang['Admin']['adminphp']['db_test_service_name'], PDO::PARAM_STR);
+            $__q44->execute();
+            $ListSellSUM = number_format($__q44->fetch(PDO::FETCH_ASSOC)['SUM(price_product)'] ?? 0);
             $Condition_marzban = "";
             $text_marzban = sprintf($textbotlang['Admin']['adminphp']['ok_select_panel_user_3'], $total_user, $active_users, $ListSell, $ListSellSUM, $marzban_list_get['agent']);
             sendmessage($from_id, $text_marzban, $optionmarzneshin, 'HTML');
@@ -3831,7 +3868,10 @@ elseif ($datain == "systemsms") {
     $page = 1;
     $items_per_page = 10;
     $start_index = ($page - 1) * $items_per_page;
-    $result = $pdo->query("SELECT * FROM user  LIMIT $start_index, $items_per_page");
+    $result = $pdo->prepare("SELECT * FROM user  LIMIT ?, ?");
+    $result->bindValue(1, $start_index, PDO::PARAM_INT);
+    $result->bindValue(2, $items_per_page, PDO::PARAM_INT);
+    $result->execute();
     $keyboardlists = [
         'inline_keyboard' => [],
     ];
@@ -3887,7 +3927,10 @@ elseif ($datain == "systemsms") {
         $next_page = $page + 1;
     }
     $start_index = ($next_page - 1) * $items_per_page;
-    $result = $pdo->query("SELECT * FROM user LIMIT $start_index, $items_per_page");
+    $result = $pdo->prepare("SELECT * FROM user LIMIT ?, ?");
+    $result->bindValue(1, $start_index, PDO::PARAM_INT);
+    $result->bindValue(2, $items_per_page, PDO::PARAM_INT);
+    $result->execute();
     $keyboardlists = [
         'inline_keyboard' => [],
     ];
@@ -3935,7 +3978,10 @@ elseif ($datain == "systemsms") {
         $next_page = $page - 1;
     }
     $start_index = ($next_page - 1) * $items_per_page;
-    $result = $pdo->query("SELECT * FROM user LIMIT $start_index, $items_per_page");
+    $result = $pdo->prepare("SELECT * FROM user LIMIT ?, ?");
+    $result->bindValue(1, $start_index, PDO::PARAM_INT);
+    $result->bindValue(2, $items_per_page, PDO::PARAM_INT);
+    $result->execute();
     $keyboardlists = [
         'inline_keyboard' => [],
     ];
@@ -3994,9 +4040,16 @@ elseif ($datain == "systemsms") {
     $items_per_page = 10;
     $start_index = ($page - 1) * $items_per_page;
     if ($typeagent == "all") {
-        $result = $pdo->query("SELECT * FROM user WHERE agent != 'f'  LIMIT $start_index, $items_per_page");
+        $result = $pdo->prepare("SELECT * FROM user WHERE agent != 'f'  LIMIT ?, ?");
+        $result->bindValue(1, $start_index, PDO::PARAM_INT);
+        $result->bindValue(2, $items_per_page, PDO::PARAM_INT);
+        $result->execute();
     } else {
-        $result = $pdo->query("SELECT * FROM user WHERE agent = '$typeagent'  LIMIT $start_index, $items_per_page");
+        $result = $pdo->prepare("SELECT * FROM user WHERE agent = ?  LIMIT ?, ?");
+        $result->bindValue(1, $typeagent, PDO::PARAM_STR);
+        $result->bindValue(2, $start_index, PDO::PARAM_INT);
+        $result->bindValue(3, $items_per_page, PDO::PARAM_INT);
+        $result->execute();
     }
     $keyboardlists = [
         'inline_keyboard' => [],
@@ -4051,9 +4104,16 @@ elseif ($datain == "systemsms") {
     }
     $start_index = ($next_page - 1) * $items_per_page;
     if ($typeagent == "all") {
-        $result = $pdo->query("SELECT * FROM user WHERE agent != 'f'  LIMIT $start_index, $items_per_page");
+        $result = $pdo->prepare("SELECT * FROM user WHERE agent != 'f'  LIMIT ?, ?");
+        $result->bindValue(1, $start_index, PDO::PARAM_INT);
+        $result->bindValue(2, $items_per_page, PDO::PARAM_INT);
+        $result->execute();
     } else {
-        $result = $pdo->query("SELECT * FROM user WHERE agent = '$typeagent'  LIMIT $start_index, $items_per_page");
+        $result = $pdo->prepare("SELECT * FROM user WHERE agent = ?  LIMIT ?, ?");
+        $result->bindValue(1, $typeagent, PDO::PARAM_STR);
+        $result->bindValue(2, $start_index, PDO::PARAM_INT);
+        $result->bindValue(3, $items_per_page, PDO::PARAM_INT);
+        $result->execute();
     }
     $keyboardlists = [
         'inline_keyboard' => [],
@@ -4104,9 +4164,16 @@ elseif ($datain == "systemsms") {
     }
     $start_index = ($next_page - 1) * $items_per_page;
     if ($typeagent == "all") {
-        $result = $pdo->query("SELECT * FROM user WHERE agent != 'f'  LIMIT $start_index, $items_per_page");
+        $result = $pdo->prepare("SELECT * FROM user WHERE agent != 'f'  LIMIT ?, ?");
+        $result->bindValue(1, $start_index, PDO::PARAM_INT);
+        $result->bindValue(2, $items_per_page, PDO::PARAM_INT);
+        $result->execute();
     } else {
-        $result = $pdo->query("SELECT * FROM user WHERE agent = '$typeagent'  LIMIT $start_index, $items_per_page");
+        $result = $pdo->prepare("SELECT * FROM user WHERE agent = ?  LIMIT ?, ?");
+        $result->bindValue(1, $typeagent, PDO::PARAM_STR);
+        $result->bindValue(2, $start_index, PDO::PARAM_INT);
+        $result->bindValue(3, $items_per_page, PDO::PARAM_INT);
+        $result->execute();
     }
     $keyboardlists = [
         'inline_keyboard' => [],
@@ -4151,7 +4218,10 @@ elseif ($datain == "systemsms") {
     $page = 1;
     $items_per_page = 10;
     $start_index = ($page - 1) * $items_per_page;
-    $result = $pdo->query("SELECT * FROM user WHERE Balance != '0'  LIMIT $start_index, $items_per_page");
+    $result = $pdo->prepare("SELECT * FROM user WHERE Balance != '0'  LIMIT ?, ?");
+    $result->bindValue(1, $start_index, PDO::PARAM_INT);
+    $result->bindValue(2, $items_per_page, PDO::PARAM_INT);
+    $result->execute();
     $keyboardlists = [
         'inline_keyboard' => [],
     ];
@@ -4207,7 +4277,10 @@ elseif ($datain == "systemsms") {
         $next_page = $page + 1;
     }
     $start_index = ($next_page - 1) * $items_per_page;
-    $result = $pdo->query("SELECT * FROM user WHERE Balance != '0'  LIMIT $start_index, $items_per_page");
+    $result = $pdo->prepare("SELECT * FROM user WHERE Balance != '0'  LIMIT ?, ?");
+    $result->bindValue(1, $start_index, PDO::PARAM_INT);
+    $result->bindValue(2, $items_per_page, PDO::PARAM_INT);
+    $result->execute();
     $keyboardlists = [
         'inline_keyboard' => [],
     ];
@@ -4255,7 +4328,10 @@ elseif ($datain == "systemsms") {
         $next_page = $page - 1;
     }
     $start_index = ($next_page - 1) * $items_per_page;
-    $result = $pdo->query("SELECT * FROM user WHERE Balance != '0'  LIMIT $start_index, $items_per_page");
+    $result = $pdo->prepare("SELECT * FROM user WHERE Balance != '0'  LIMIT ?, ?");
+    $result->bindValue(1, $start_index, PDO::PARAM_INT);
+    $result->bindValue(2, $items_per_page, PDO::PARAM_INT);
+    $result->execute();
     $keyboardlists = [
         'inline_keyboard' => [],
     ];
@@ -4299,7 +4375,10 @@ elseif ($datain == "systemsms") {
     $page = 1;
     $items_per_page = 10;
     $start_index = ($page - 1) * $items_per_page;
-    $result = $pdo->query("SELECT * FROM user WHERE affiliatescount != '0'  LIMIT $start_index, $items_per_page");
+    $result = $pdo->prepare("SELECT * FROM user WHERE affiliatescount != '0'  LIMIT ?, ?");
+    $result->bindValue(1, $start_index, PDO::PARAM_INT);
+    $result->bindValue(2, $items_per_page, PDO::PARAM_INT);
+    $result->execute();
     $keyboardlists = [
         'inline_keyboard' => [],
     ];
@@ -4355,7 +4434,10 @@ elseif ($datain == "systemsms") {
         $next_page = $page + 1;
     }
     $start_index = ($next_page - 1) * $items_per_page;
-    $result = $pdo->query("SELECT * FROM user WHERE affiliatescount != '0'  LIMIT $start_index, $items_per_page");
+    $result = $pdo->prepare("SELECT * FROM user WHERE affiliatescount != '0'  LIMIT ?, ?");
+    $result->bindValue(1, $start_index, PDO::PARAM_INT);
+    $result->bindValue(2, $items_per_page, PDO::PARAM_INT);
+    $result->execute();
     $keyboardlists = [
         'inline_keyboard' => [],
     ];
@@ -4403,7 +4485,10 @@ elseif ($datain == "systemsms") {
         $next_page = $page - 1;
     }
     $start_index = ($next_page - 1) * $items_per_page;
-    $result = $pdo->query("SELECT * FROM user WHERE affiliatescount != '0'  LIMIT $start_index, $items_per_page");
+    $result = $pdo->prepare("SELECT * FROM user WHERE affiliatescount != '0'  LIMIT ?, ?");
+    $result->bindValue(1, $start_index, PDO::PARAM_INT);
+    $result->bindValue(2, $items_per_page, PDO::PARAM_INT);
+    $result->execute();
     $keyboardlists = [
         'inline_keyboard' => [],
     ];
@@ -5078,8 +5163,8 @@ elseif ($datain == "systemsms") {
     update("user", "agent", "f", "id", $id_user);
     update("user", "pricediscount", "0", "id", $id_user);
     update("user", "expire", null, "id", $id_user);
-    $stmt = $pdo->prepare("DELETE FROM Requestagent WHERE id = '$id_user'");
-    $stmt->execute();
+    $stmt = $pdo->prepare("DELETE FROM Requestagent WHERE id = :mp7");
+    $stmt->execute([':mp7' => $id_user]);
     step('home', $from_id);
 } elseif (preg_match('/addagent_(\w+)/', $datain, $dataget)) {
     $id_user = $dataget[1];
@@ -6402,29 +6487,29 @@ if ($datain == "settimecornremove" && $adminrulecheck['rule'] == "administrator"
     ]);
     sendmessage($from_id, $textoptimize, $Response, 'HTML');
 } elseif ($datain == "optimizebot") {
-    $stmt = $pdo->prepare("SELECT * FROM invoice WHERE Status = 'unpaid' AND name_product != '{$textbotlang['Admin']['adminphp']['db_test_service_name']}'");
-    $stmt->execute();
+    $stmt = $pdo->prepare("SELECT * FROM invoice WHERE Status = 'unpaid' AND name_product != :mp8");
+    $stmt->execute([':mp8' => $textbotlang['Admin']['adminphp']['db_test_service_name']]);
     $countunpiadorder = $stmt->rowCount();
-    $stmt = $pdo->prepare("SELECT * FROM invoice WHERE Status = 'disabled' AND name_product != '{$textbotlang['Admin']['adminphp']['db_test_service_name']}'");
-    $stmt->execute();
+    $stmt = $pdo->prepare("SELECT * FROM invoice WHERE Status = 'disabled' AND name_product != :mp9");
+    $stmt->execute([':mp9' => $textbotlang['Admin']['adminphp']['db_test_service_name']]);
     $countdisableorder = $stmt->rowCount();
     $stmt = $pdo->prepare("SELECT * FROM invoice WHERE (Status = 'removebyadmin' or Status = 'removedbyadmin')");
     $stmt->execute();
     $countremoveadminorder = $stmt->rowCount();
-    $stmt = $pdo->prepare("SELECT * FROM invoice WHERE Status = 'disabled' AND name_product = '{$textbotlang['Admin']['adminphp']['db_test_service_name']}'");
-    $stmt->execute();
+    $stmt = $pdo->prepare("SELECT * FROM invoice WHERE Status = 'disabled' AND name_product = :mp10");
+    $stmt->execute([':mp10' => $textbotlang['Admin']['adminphp']['db_test_service_name']]);
     $countdisableordtester = $stmt->rowCount();
     #remove data
-    $stmt = $pdo->prepare("DELETE FROM invoice WHERE Status = 'unpaid' AND name_product != '{$textbotlang['Admin']['adminphp']['db_test_service_name']}'");
-    $stmt->execute();
-    $stmt = $pdo->prepare("DELETE FROM invoice WHERE Status = 'disabled' AND name_product != '{$textbotlang['Admin']['adminphp']['db_test_service_name']}'");
-    $stmt->execute();
+    $stmt = $pdo->prepare("DELETE FROM invoice WHERE Status = 'unpaid' AND name_product != :mp11");
+    $stmt->execute([':mp11' => $textbotlang['Admin']['adminphp']['db_test_service_name']]);
+    $stmt = $pdo->prepare("DELETE FROM invoice WHERE Status = 'disabled' AND name_product != :mp12");
+    $stmt->execute([':mp12' => $textbotlang['Admin']['adminphp']['db_test_service_name']]);
     $stmt = $pdo->prepare("DELETE FROM invoice WHERE Status = 'removebyadmin'");
     $stmt->execute();
     $stmt = $pdo->prepare("DELETE FROM invoice WHERE Status = 'removedbyadmin'");
     $stmt->execute();
-    $stmt = $pdo->prepare("DELETE FROM invoice WHERE Status = 'disabled' AND name_product = '{$textbotlang['Admin']['adminphp']['db_test_service_name']}'");
-    $stmt->execute();
+    $stmt = $pdo->prepare("DELETE FROM invoice WHERE Status = 'disabled' AND name_product = :mp13");
+    $stmt->execute([':mp13' => $textbotlang['Admin']['adminphp']['db_test_service_name']]);
     $stmt = $pdo->prepare("DELETE FROM invoice WHERE Status = 'removeTime'");
     $stmt->execute();
     $stmt = $pdo->prepare("DELETE FROM invoice WHERE Status = 'removevolume'");
@@ -7258,8 +7343,8 @@ if ($datain == "settimecornremove" && $adminrulecheck['rule'] == "administrator"
 } elseif ($text == $textbotlang['Admin']['adminphp']['err_delete_config']) {
     $panel = select("marzban_panel", "*", "name_panel", $user['Processing_value'], "select");
     $listconfig = [];
-    $stmt = $pdo->prepare("SELECT * FROM manualsell WHERE codepanel = '{$panel['code_panel']}'");
-    $stmt->execute();
+    $stmt = $pdo->prepare("SELECT * FROM manualsell WHERE codepanel = :mp14");
+    $stmt->execute([':mp14' => $panel['code_panel']]);
     while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
         $listconfig[] = [$row['namerecord']];
     }
@@ -7459,8 +7544,8 @@ if ($datain == "settimecornremove" && $adminrulecheck['rule'] == "administrator"
 } elseif ($text == $textbotlang['keyboard']['editConfig']) {
     $panel = select("marzban_panel", "*", "name_panel", $user['Processing_value'], "select");
     $listconfig = [];
-    $stmt = $pdo->prepare("SELECT * FROM manualsell WHERE codepanel = '{$panel['code_panel']}'");
-    $stmt->execute();
+    $stmt = $pdo->prepare("SELECT * FROM manualsell WHERE codepanel = :mp15");
+    $stmt->execute([':mp15' => $panel['code_panel']]);
     while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
         $listconfig[] = [$row['namerecord']];
     }
@@ -7524,8 +7609,8 @@ if ($datain == "settimecornremove" && $adminrulecheck['rule'] == "administrator"
         return;
     }
     $userdata = json_decode($user['Processing_value'], true);
-    $stmt = $pdo->prepare("SELECT * FROM product WHERE Location = '{$userdata['namepanel']}' AND agent = '{$userdata['agent']}'");
-    $stmt->execute();
+    $stmt = $pdo->prepare("SELECT * FROM product WHERE Location = :mp16 AND agent = :mp17");
+    $stmt->execute([':mp16' => $userdata['namepanel'], ':mp17' => $userdata['agent']]);
     $product = $stmt->fetchAll();
     if ($product == false) {
         sendmessage($from_id, $textbotlang['Admin']['adminphp']['err_notfound_price_change'], $shopkeyboard, 'HTML');
@@ -7533,13 +7618,13 @@ if ($datain == "settimecornremove" && $adminrulecheck['rule'] == "administrator"
         return;
     }
     if ($userdata['type_price'] == "static") {
-        $stmt = $pdo->prepare("UPDATE  product set price_product = price_product + :price WHERE Location = '{$userdata['namepanel']}' AND agent = '{$userdata['agent']}'");
+        $stmt = $pdo->prepare("UPDATE  product set price_product = price_product + :price WHERE Location = :mp18 AND agent = :mp19");
         $stmt->bindParam(':price', $text, PDO::PARAM_STR);
     } else {
-        $stmt = $pdo->prepare("UPDATE  product set price_product = price_product + (price_product * :price / 100)  WHERE Location = '{$userdata['namepanel']}' AND agent = '{$userdata['agent']}'");
+        $stmt = $pdo->prepare("UPDATE  product set price_product = price_product + (price_product * :price / 100)  WHERE Location = :mp20 AND agent = :mp21");
         $stmt->bindParam(':price', $text, PDO::PARAM_STR);
     }
-    $stmt->execute();
+    $stmt->execute([':mp20' => $userdata['namepanel'], ':mp21' => $userdata['agent'], ':mp18' => $userdata['namepanel'], ':mp19' => $userdata['agent']]);
     sendmessage($from_id, $textbotlang['Admin']['adminphp']['ok_success_amount_2'], $shopkeyboard, 'HTML');
     step("home", $from_id);
 } elseif ($text == $textbotlang['keyboard']['decreaseGroupPrice']) {
@@ -7559,8 +7644,8 @@ if ($datain == "settimecornremove" && $adminrulecheck['rule'] == "administrator"
         return;
     }
     $userdata = json_decode($user['Processing_value'], true);
-    $stmt = $pdo->prepare("SELECT * FROM product WHERE Location = '{$userdata['namepanel']}' AND agent = '{$userdata['agent']}'");
-    $stmt->execute();
+    $stmt = $pdo->prepare("SELECT * FROM product WHERE Location = :mp22 AND agent = :mp23");
+    $stmt->execute([':mp22' => $userdata['namepanel'], ':mp23' => $userdata['agent']]);
     $product = $stmt->fetchAll();
     if ($product == false) {
         sendmessage($from_id, $textbotlang['Admin']['adminphp']['err_notfound_price_change'], $shopkeyboard, 'HTML');
@@ -8955,7 +9040,11 @@ if (isset($update["inline_query"])) {
     $page = 1;
     $items_per_page = 10;
     $start_index = ($page - 1) * $items_per_page;
-    $result = $pdo->query("SELECT * FROM invoice WHERE id_user = '$id_user'  LIMIT $start_index, $items_per_page");
+    $result = $pdo->prepare("SELECT * FROM invoice WHERE id_user = ?  LIMIT ?, ?");
+    $result->bindValue(1, $id_user, PDO::PARAM_STR);
+    $result->bindValue(2, $start_index, PDO::PARAM_INT);
+    $result->bindValue(3, $items_per_page, PDO::PARAM_INT);
+    $result->execute();
     $keyboardlists = [
         'inline_keyboard' => [],
     ];
@@ -9005,7 +9094,11 @@ if (isset($update["inline_query"])) {
         $next_page = $page + 1;
     }
     $start_index = ($next_page - 1) * $items_per_page;
-    $result = $pdo->query("SELECT * FROM invoice WHERE id_user = '$id_user'  LIMIT $start_index, $items_per_page");
+    $result = $pdo->prepare("SELECT * FROM invoice WHERE id_user = ?  LIMIT ?, ?");
+    $result->bindValue(1, $id_user, PDO::PARAM_STR);
+    $result->bindValue(2, $start_index, PDO::PARAM_INT);
+    $result->bindValue(3, $items_per_page, PDO::PARAM_INT);
+    $result->execute();
     $keyboardlists = [
         'inline_keyboard' => [],
     ];
@@ -9055,7 +9148,11 @@ if (isset($update["inline_query"])) {
         $next_page = $page - 1;
     }
     $start_index = ($next_page - 1) * $items_per_page;
-    $result = $pdo->query("SELECT * FROM invoice WHERE id_user = '$id_user'  LIMIT $start_index, $items_per_page");
+    $result = $pdo->prepare("SELECT * FROM invoice WHERE id_user = ?  LIMIT ?, ?");
+    $result->bindValue(1, $id_user, PDO::PARAM_STR);
+    $result->bindValue(2, $start_index, PDO::PARAM_INT);
+    $result->bindValue(3, $items_per_page, PDO::PARAM_INT);
+    $result->execute();
     $keyboardlists = [
         'inline_keyboard' => [],
     ];
@@ -9099,7 +9196,10 @@ if (isset($update["inline_query"])) {
     $page = 1;
     $items_per_page = 10;
     $start_index = ($page - 1) * $items_per_page;
-    $result = $pdo->query("SELECT * FROM user WHERE cardpayment = '1'  LIMIT $start_index, $items_per_page");
+    $result = $pdo->prepare("SELECT * FROM user WHERE cardpayment = '1'  LIMIT ?, ?");
+    $result->bindValue(1, $start_index, PDO::PARAM_INT);
+    $result->bindValue(2, $items_per_page, PDO::PARAM_INT);
+    $result->execute();
     $keyboardlists = [
         'inline_keyboard' => [],
     ];
@@ -9155,7 +9255,10 @@ if (isset($update["inline_query"])) {
         $next_page = $page + 1;
     }
     $start_index = ($next_page - 1) * $items_per_page;
-    $result = $pdo->query("SELECT * FROM user WHERE cardpayment = '1'  LIMIT $start_index, $items_per_page");
+    $result = $pdo->prepare("SELECT * FROM user WHERE cardpayment = '1'  LIMIT ?, ?");
+    $result->bindValue(1, $start_index, PDO::PARAM_INT);
+    $result->bindValue(2, $items_per_page, PDO::PARAM_INT);
+    $result->execute();
     $keyboardlists = [
         'inline_keyboard' => [],
     ];
@@ -9203,7 +9306,10 @@ if (isset($update["inline_query"])) {
         $next_page = $page - 1;
     }
     $start_index = ($next_page - 1) * $items_per_page;
-    $result = $pdo->query("SELECT * FROM user WHERE cardpayment = '1'  LIMIT $start_index, $items_per_page");
+    $result = $pdo->prepare("SELECT * FROM user WHERE cardpayment = '1'  LIMIT ?, ?");
+    $result->bindValue(1, $start_index, PDO::PARAM_INT);
+    $result->bindValue(2, $items_per_page, PDO::PARAM_INT);
+    $result->execute();
     $keyboardlists = [
         'inline_keyboard' => [],
     ];
@@ -10112,8 +10218,8 @@ if ($datain == "settimecornday" && $adminrulecheck['rule'] == "administrator") {
     }
     $message_id = Editmessagetext($from_id, $message_id, $textbotlang['Admin']['adminphp']['ok_success_add_2'], $keyboardstatistics);
     $userdata['id_message'] = $message_id['result']['message_id'];
-    $stmt = $pdo->prepare("SELECT username FROM invoice WHERE  (status = 'active' OR status = 'end_of_time'  OR status = 'end_of_volume' OR status = 'sendedwarn' OR Status = 'send_on_hold') AND Service_location = '{$userdata['name_panel']}' AND name_product != '{$textbotlang['Admin']['adminphp']['db_test_service_name']}'");
-    $stmt->execute();
+    $stmt = $pdo->prepare("SELECT username FROM invoice WHERE  (status = 'active' OR status = 'end_of_time'  OR status = 'end_of_volume' OR status = 'sendedwarn' OR Status = 'send_on_hold') AND Service_location = :mp24 AND name_product != :mp25");
+    $stmt->execute([':mp24' => $userdata['name_panel'], ':mp25' => $textbotlang['Admin']['adminphp']['db_test_service_name']]);
     $userslist = json_encode($stmt->fetchAll());
     file_put_contents('cronbot/gift', json_encode($userdata));
     file_put_contents('cronbot/username.json', $userslist);
@@ -10369,7 +10475,10 @@ if ($datain == "settimecornday" && $adminrulecheck['rule'] == "administrator") {
     $page = 1;
     $items_per_page = 10;
     $start_index = ($page - 1) * $items_per_page;
-    $result = $pdo->query("SELECT * FROM user WHERE Balance < 0  LIMIT $start_index, $items_per_page");
+    $result = $pdo->prepare("SELECT * FROM user WHERE Balance < 0  LIMIT ?, ?");
+    $result->bindValue(1, $start_index, PDO::PARAM_INT);
+    $result->bindValue(2, $items_per_page, PDO::PARAM_INT);
+    $result->execute();
     $keyboardlists = [
         'inline_keyboard' => [],
     ];
@@ -10421,7 +10530,10 @@ if ($datain == "settimecornday" && $adminrulecheck['rule'] == "administrator") {
         $next_page = $page + 1;
     }
     $start_index = ($next_page - 1) * $items_per_page;
-    $result = $pdo->query("SELECT * FROM user WHERE Balance < 0  LIMIT $start_index, $items_per_page");
+    $result = $pdo->prepare("SELECT * FROM user WHERE Balance < 0  LIMIT ?, ?");
+    $result->bindValue(1, $start_index, PDO::PARAM_INT);
+    $result->bindValue(2, $items_per_page, PDO::PARAM_INT);
+    $result->execute();
     $keyboardlists = [
         'inline_keyboard' => [],
     ];
@@ -10476,7 +10588,10 @@ if ($datain == "settimecornday" && $adminrulecheck['rule'] == "administrator") {
         $next_page = $page - 1;
     }
     $start_index = ($next_page - 1) * $items_per_page;
-    $result = $pdo->query("SELECT * FROM user WHERE Balance < 0  LIMIT $start_index, $items_per_page");
+    $result = $pdo->prepare("SELECT * FROM user WHERE Balance < 0  LIMIT ?, ?");
+    $result->bindValue(1, $start_index, PDO::PARAM_INT);
+    $result->bindValue(2, $items_per_page, PDO::PARAM_INT);
+    $result->execute();
     $keyboardlists = [
         'inline_keyboard' => [],
     ];

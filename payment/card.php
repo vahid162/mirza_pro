@@ -102,13 +102,21 @@ if ($PaySetting == "onautoconfirm") {
     if (is_numeric($amountInteger) && substr($amountInteger, -3) === '000')
         return;
     if (isset($amountInteger) && $amountInteger !== NULL) {
-        $datauser = ($pdo->query("SELECT * FROM Payment_report WHERE price = :amountInteger AND (payment_Status = 'Unpaid' OR payment_Status = 'waiting')"))->fetch(PDO::FETCH_ASSOC);
-        $datauser->bindParam(':amountInteger', $amountInteger, PDO::PARAM_INT);
+        $stmt = $pdo->prepare("SELECT * FROM Payment_report WHERE price = :amountInteger AND (payment_Status = 'Unpaid' OR payment_Status = 'waiting')");
+        $stmt->bindValue(':amountInteger', $amountInteger, PDO::PARAM_INT);
+        $stmt->execute();
+        $datauser = $stmt->fetch(PDO::FETCH_ASSOC);
         $order_id = $datauser['id_order'];
-        $Payment_report = ($pdo->query("SELECT * FROM Payment_report WHERE id_order = '$order_id' LIMIT 1"))->fetch(PDO::FETCH_ASSOC);
+        $__q13 = $pdo->prepare("SELECT * FROM Payment_report WHERE id_order = ? LIMIT 1");
+        $__q13->bindValue(1, $order_id, PDO::PARAM_STR);
+        $__q13->execute();
+        $Payment_report = $__q13->fetch(PDO::FETCH_ASSOC);
         if (!isset($Payment_report['price']) || $Payment_report['price'] == null)
             return;
-        $Balance_id = ($pdo->query("SELECT * FROM user WHERE id = '{$Payment_report['id_user']}' LIMIT 1"))->fetch(PDO::FETCH_ASSOC);
+        $__q14 = $pdo->prepare("SELECT * FROM user WHERE id = ? LIMIT 1");
+        $__q14->bindValue(1, $Payment_report['id_user'], PDO::PARAM_STR);
+        $__q14->execute();
+        $Balance_id = $__q14->fetch(PDO::FETCH_ASSOC);
         $textbotlang = languagechange();
 
         if ($Payment_report['payment_Status'] == "paid" || $Payment_report['payment_Status'] == "reject") {
@@ -122,7 +130,10 @@ if ($PaySetting == "onautoconfirm") {
         }
         DirectPayment($order_id, "../images.jpg");
         update("Payment_report", "payment_Status", "paid", 'id_order', $order_id);
-        $balanceformatsell = number_format(($pdo->query("SELECT (Balance) FROM user WHERE id = '{$Payment_report['id_user']}' LIMIT 1"))->fetch(PDO::FETCH_ASSOC)['Balance'], 0);
+        $__q15 = $pdo->prepare("SELECT (Balance) FROM user WHERE id = ? LIMIT 1");
+        $__q15->bindValue(1, $Payment_report['id_user'], PDO::PARAM_STR);
+        $__q15->execute();
+        $balanceformatsell = number_format($__q15->fetch(PDO::FETCH_ASSOC)['Balance'], 0);
         $paymentreports = select("topicid", "idreport", "report", "paymentreport", "select")['idreport'];
         $text_report = sprintf($textbotlang['paymentGateway']['reportCard'], $Payment_report['price'], $Balance_id['id'], $Balance_id['username'], $balanceformatsell, $order_id);
         if (strlen($setting['Channel_Report']) > 0) {

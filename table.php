@@ -284,8 +284,8 @@ try {
         rule varchar(500) NOT NULL)");
         $stmt->execute();
         $randomString = bin2hex(random_bytes(5));
-        $stmt = $pdo->prepare("INSERT INTO admin (id_admin,rule,username,password) VALUES ('$adminnumber','administrator','admin','$randomString')");
-        $stmt->execute();
+        $stmt = $pdo->prepare("INSERT INTO admin (id_admin,rule,username,password) VALUES (:mp1,'administrator','admin',:mp2)");
+        $stmt->execute([':mp1' => $adminnumber, ':mp2' => $randomString]);
     } else {
         addFieldToTable("admin", "rule", "administrator", "VARCHAR(200)");
         addFieldToTable("admin", "username", null, "VARCHAR(200)");
@@ -436,13 +436,16 @@ try {
         addFieldToTable("marzban_panel", "sublink", "onsublink", "VARCHAR(50)");
         addFieldToTable("marzban_panel", "config", "offconfig", "VARCHAR(50)");
         addFieldToTable("marzban_panel", "version_panel", "0", "VARCHAR(60)");
-        $max_stmt = $pdo->query("SELECT MAX(CAST(SUBSTRING(code_panel, 3) AS UNSIGNED)) as max_num FROM marzban_panel WHERE code_panel LIKE '7e%'");
+        $max_stmt = $pdo->prepare("SELECT MAX(CAST(SUBSTRING(code_panel, 3) AS UNSIGNED)) as max_num FROM marzban_panel WHERE code_panel LIKE '7e%'");
+        $max_stmt->execute();
         $max_row = $max_stmt->fetch(PDO::FETCH_ASSOC);
         $next_num = $max_row['max_num'] ? (int) $max_row['max_num'] + 1 : 15;
-        $stmt = $pdo->query("SELECT id FROM marzban_panel WHERE code_panel IS NULL OR code_panel = ''");
+        $stmt = $pdo->prepare("SELECT id FROM marzban_panel WHERE code_panel IS NULL OR code_panel = ''");
+        $stmt->execute();
         while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
             $code = '7e' . $next_num;
-            $pdo->query("UPDATE marzban_panel SET code_panel = '$code' WHERE id = " . $row['id']);
+            $stmt = $pdo->prepare("UPDATE marzban_panel SET code_panel = ? WHERE id = ?");
+            $stmt->execute([$code, $row['id']]);
             $next_num++;
         }
     }
@@ -533,7 +536,9 @@ try {
                 'time' => false,
             ));
             $result = $pdo->query("ALTER TABLE invoice ADD notifctions TEXT NOT NULL");
-            $pdo->query("UPDATE invoice SET notifctions = '$data'");
+            $__q1 = $pdo->prepare("UPDATE invoice SET notifctions = ?");
+            $__q1->bindValue(1, $data, PDO::PARAM_STR);
+            $__q1->execute();
         }
         $Check_filde = $pdo->query("SHOW COLUMNS FROM invoice LIKE 'time_cron'");
         if (($Check_filde)->rowCount() != 1) {
@@ -760,11 +765,17 @@ try {
         }
 
         foreach ($settings as $setting) {
-            $pdo->query("INSERT INTO PaySetting (NamePay, ValuePay) VALUES ('{$setting[0]}', '{$setting[1]}')");
+            $__q2 = $pdo->prepare("INSERT INTO PaySetting (NamePay, ValuePay) VALUES (?, ?)");
+            $__q2->bindValue(1, $setting[0], PDO::PARAM_STR);
+            $__q2->bindValue(2, $setting[1], PDO::PARAM_STR);
+            $__q2->execute();
         }
     } else {
         foreach ($settings as $setting) {
-            $pdo->query("INSERT IGNORE INTO PaySetting (NamePay, ValuePay) VALUES ('{$setting[0]}', '{$setting[1]}')");
+            $__q3 = $pdo->prepare("INSERT IGNORE INTO PaySetting (NamePay, ValuePay) VALUES (?, ?)");
+            $__q3->bindValue(1, $setting[0], PDO::PARAM_STR);
+            $__q3->bindValue(2, $setting[1], PDO::PARAM_STR);
+            $__q3->execute();
         }
 
 
@@ -914,7 +925,9 @@ try {
         $pdo->query("INSERT INTO shopSetting (Namevalue,value) VALUES ('configshow','onconfig')");
         $pdo->query("INSERT INTO shopSetting (Namevalue,value) VALUES ('backserviecstatus','on')");
         $pdo->query("INSERT INTO shopSetting (Namevalue,value) VALUES ('chashbackextend','0')");
-        $pdo->query("INSERT INTO shopSetting (Namevalue,value) VALUES ('chashbackextend_agent','$agent_cashback')");
+        $__q4 = $pdo->prepare("INSERT INTO shopSetting (Namevalue,value) VALUES ('chashbackextend_agent',?)");
+        $__q4->bindValue(1, $agent_cashback, PDO::PARAM_STR);
+        $__q4->execute();
     } else {
         $pdo->query("INSERT IGNORE INTO shopSetting (Namevalue,value) VALUES ('customvolmef','4000')");
         $pdo->query("INSERT IGNORE INTO shopSetting (Namevalue,value) VALUES ('customvolmen','4000')");
@@ -932,7 +945,9 @@ try {
         $pdo->query("INSERT IGNORE INTO shopSetting (Namevalue,value) VALUES ('configshow','onconfig')");
         $pdo->query("INSERT IGNORE INTO shopSetting (Namevalue,value) VALUES ('backserviecstatus','on')");
         $pdo->query("INSERT IGNORE INTO shopSetting (Namevalue,value) VALUES ('chashbackextend','0')");
-        $pdo->query("INSERT IGNORE INTO shopSetting (Namevalue,value) VALUES ('chashbackextend_agent','$agent_cashback')");
+        $__q5 = $pdo->prepare("INSERT IGNORE INTO shopSetting (Namevalue,value) VALUES ('chashbackextend_agent',?)");
+        $__q5->bindValue(1, $agent_cashback, PDO::PARAM_STR);
+        $__q5->execute();
 
 
 

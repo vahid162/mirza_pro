@@ -281,7 +281,8 @@ switch ($data['actions']) {
             if ($user_info['number'] == "confrim number by admin") {
                 $numberphone = $textbotlang['hardcoded']['confirmedByAdmin'];
             }
-            $stmt = $pdo->prepare("SELECT * FROM invoice WHERE id_user = :id_user AND name_product != '{$textbotlang['Admin']['adminphp']['db_test_service_name']}' AND (status = 'active' OR status = 'end_of_time'  OR status = 'end_of_volume' OR status = 'sendedwarn' OR Status = 'send_on_hold')");
+            $stmt = $pdo->prepare("SELECT * FROM invoice WHERE id_user = :id_user AND name_product != :mp1 AND (status = 'active' OR status = 'end_of_time'  OR status = 'end_of_volume' OR status = 'sendedwarn' OR Status = 'send_on_hold')");
+            $stmt->bindValue(':mp1', $textbotlang['Admin']['adminphp']['db_test_service_name'], PDO::PARAM_STR);
             $stmt->execute([
                 ':id_user' => $user_info['id']
             ]);
@@ -597,6 +598,7 @@ switch ($data['actions']) {
             }
             $category_remark = null;
             $category_remarks = "";
+            $queryParams = [':loc' => $panel['name_panel'], ':ag' => $user_info['agent']];
             $selected_category_id = isset($data['category_id']) ? $data['category_id'] : null;
             if (!empty($data['category_id'])) {
                 $category_remark = select("category", "*", "id", $data['category_id'], "select");
@@ -607,12 +609,17 @@ switch ($data['actions']) {
                     ]);
                     return;
                 }
-                $category_remarks = "AND category = '{$category_remark['remark']}'";
+                $category_remarks = "AND category = :catrem";
+                $queryParams[':catrem'] = $category_remark['remark'];
                 $selected_category_id = $category_remark['id'];
             }
-            $time_range_day = $data['time_range_day'] == 0 ? "" : "AND Service_time = '{$data['time_range_day']}'";
-            $stmt = $pdo->prepare("SELECT * FROM product WHERE (Location = '{$panel['name_panel']}' OR Location = '/all')AND agent= '{$user_info['agent']}' $category_remarks $time_range_day");
-            $stmt->execute();
+            $time_range_day = "";
+            if ($data['time_range_day'] != 0) {
+                $time_range_day = "AND Service_time = :trd";
+                $queryParams[':trd'] = $data['time_range_day'];
+            }
+            $stmt = $pdo->prepare("SELECT * FROM product WHERE (Location = :loc OR Location = '/all')AND agent= :ag $category_remarks $time_range_day");
+            $stmt->execute($queryParams);
             $product_list = [];
             while ($result = $stmt->fetch(PDO::FETCH_ASSOC)) {
                 $hide_panel = json_decode($result['hide_panel'], true);
@@ -621,8 +628,8 @@ switch ($data['actions']) {
                 }
                 if (in_array($panel['name_panel'], $hide_panel))
                     continue;
-                $stmts2 = $pdo->prepare("SELECT * FROM invoice WHERE Status != 'Unpaid' AND id_user = '{$user_info['id']}'");
-                $stmts2->execute();
+                $stmts2 = $pdo->prepare("SELECT * FROM invoice WHERE Status != 'Unpaid' AND id_user = :mp4");
+                $stmts2->execute([':mp4' => $user_info['id']]);
                 $countorder = $stmts2->rowCount();
                 if ($result['one_buy_status'] == "1" && $countorder != 0)
                     continue;
@@ -892,9 +899,9 @@ switch ($data['actions']) {
         }
         $affiliatescommission = select("affiliates", "*", null, null, "select");
         $marzbanporsant_one_buy = select("affiliates", "*", null, null, "select");
-        $stmt = $pdo->prepare("SELECT * FROM invoice WHERE name_product != '{$textbotlang['Admin']['adminphp']['db_test_service_name']}'  AND id_user = :id_user");
+        $stmt = $pdo->prepare("SELECT * FROM invoice WHERE name_product != :mp5  AND id_user = :id_user");
         $stmt->bindParam(':id_user', $user_info['id']);
-        $stmt->execute();
+        $stmt->execute([':mp5' => $textbotlang['Admin']['adminphp']['db_test_service_name']]);
         $countinvoice = $stmt->rowCount();
         if ($affiliatescommission['status_commission'] == "oncommission" && ($user_info['affiliates'] != null && intval($user_info['affiliates']) != 0)) {
             if ($marzbanporsant_one_buy['porsant_one_buy'] == "on_buy_porsant") {

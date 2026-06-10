@@ -52,8 +52,8 @@ $backuser = json_encode([
 
 // keyboard list panel for test 
 
-$stmt = $pdo->prepare("SELECT * FROM marzban_panel WHERE TestAccount = 'ONTestAccount' AND (agent = '{$userbot['agent']}' OR agent = 'all')");
-$stmt->execute();
+$stmt = $pdo->prepare("SELECT * FROM marzban_panel WHERE TestAccount = 'ONTestAccount' AND (agent = :mp1 OR agent = 'all')");
+$stmt->execute([':mp1' => $userbot['agent']]);
 $list_marzban_panel_usertest = ['inline_keyboard' => []];
 while ($result = $stmt->fetch(PDO::FETCH_ASSOC)) {
     if ($result['hide_user'] != null and in_array($from_id, json_decode($result['hide_user'], true))) continue;
@@ -149,8 +149,8 @@ $backadmin = json_encode([
 ]);
 
 //------------------  [ listpanelusers ]----------------//
-$stmt = $pdo->prepare("SELECT * FROM marzban_panel WHERE status = 'active' AND (agent = '{$userbot['agent']}' OR agent = 'all')");
-$stmt->execute();
+$stmt = $pdo->prepare("SELECT * FROM marzban_panel WHERE status = 'active' AND (agent = :mp2 OR agent = 'all')");
+$stmt->execute([':mp2' => $userbot['agent']]);
 $list_marzban_panel_users = ['inline_keyboard' => []];
 while ($result = $stmt->fetch(PDO::FETCH_ASSOC)) {
     if ($result['hide_user'] != null and in_array($from_id, json_decode($result['hide_user'], true))) continue;

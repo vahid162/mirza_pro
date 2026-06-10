@@ -3279,7 +3279,8 @@ if ($user['step'] == "createusertest" || preg_match('/locationtest_(.*)/', $data
     } else {
         $numberphone = $numberphone;
     }
-    $stmt = $pdo->prepare("SELECT * FROM invoice WHERE id_user = :id_user AND name_product != '{$textbotlang['Admin']['adminphp']['db_test_service_name']}' AND (status = 'active' OR status = 'end_of_time'  OR status = 'end_of_volume' OR status = 'sendedwarn' OR Status = 'send_on_hold')");
+    $stmt = $pdo->prepare("SELECT * FROM invoice WHERE id_user = :id_user AND name_product != :mp1 AND (status = 'active' OR status = 'end_of_time'  OR status = 'end_of_volume' OR status = 'sendedwarn' OR Status = 'send_on_hold')");
+    $stmt->bindValue(':mp1', $textbotlang['Admin']['adminphp']['db_test_service_name'], PDO::PARAM_STR);
     $stmt->execute([
         ':id_user' => $from_id
     ]);
@@ -3338,7 +3339,9 @@ if ($user['step'] == "createusertest" || preg_match('/locationtest_(.*)/', $data
         sendmessage($from_id, $textbotlang['extracted']['index_php']['buttonDisabled'], null, 'HTML');
         return;
     }
-    $locationproduct = $pdo->query("SELECT * FROM marzban_panel  WHERE status = 'active' AND (agent = '{$user['agent']}' OR agent = 'all')");
+    $locationproduct = $pdo->prepare("SELECT * FROM marzban_panel  WHERE status = 'active' AND (agent = ? OR agent = 'all')");
+    $locationproduct->bindValue(1, $user['agent'], PDO::PARAM_STR);
+    $locationproduct->execute();
     if (($locationproduct)->rowCount() == 0) {
         sendmessage($from_id, $textbotlang['Admin']['managepanel']['nullPanel'], null, 'HTML');
         return;
@@ -3467,8 +3470,8 @@ if ($user['step'] == "createusertest" || preg_match('/locationtest_(.*)/', $data
     }
     $marzban_list_get = select("marzban_panel", "*", "name_panel", $location, "select");
     $locationproductcount = select("marzban_panel", "*", "name_panel", $location, "count");
-    $stmt = $pdo->prepare("SELECT * FROM invoice WHERE (status = 'active' OR status = 'end_of_time' OR status = 'end_of_volume' OR status = 'sendedwarn' OR Status = 'send_on_hold') AND  Service_location = '{$marzban_list_get['name_panel']}'");
-    $stmt->execute();
+    $stmt = $pdo->prepare("SELECT * FROM invoice WHERE (status = 'active' OR status = 'end_of_time' OR status = 'end_of_volume' OR status = 'sendedwarn' OR Status = 'send_on_hold') AND  Service_location = :mp2");
+    $stmt->execute([':mp2' => $marzban_list_get['name_panel']]);
     $countinovoice = $stmt->rowCount();
     if ($marzban_list_get['limit_panel'] != "unlimited") {
         if ($countinovoice >= $marzban_list_get['limit_panel']) {
@@ -3560,8 +3563,8 @@ if ($user['step'] == "createusertest" || preg_match('/locationtest_(.*)/', $data
     if ($setting['statuscategorygenral'] == "oncategorys") {
         savedata("save", "monthproduct", $monthenumber);
         $marzban_list_get = select("marzban_panel", "*", "name_panel", $userdate['name_panel'], "select");
-        $stmt = $pdo->prepare("SELECT * FROM marzban_panel  WHERE status = 'active' AND (agent = '{$user['agent']}' OR agent = 'all')");
-        $stmt->execute();
+        $stmt = $pdo->prepare("SELECT * FROM marzban_panel  WHERE status = 'active' AND (agent = :mp3 OR agent = 'all')");
+        $stmt->execute([':mp3' => $user['agent']]);
         $count_panel = $stmt->rowCount();
         if ($count_panel == 1) {
             $back = "buybacktow";
@@ -3707,7 +3710,11 @@ if ($user['step'] == "createusertest" || preg_match('/locationtest_(.*)/', $data
         $info_product['Service_time'] = $parts[1];
         $info_product['price_product'] = ($parts[2] * $custompricevalue) + ($parts[1] * $customtimevalueprice);
     } else {
-        $info_product = ($pdo->query("SELECT * FROM product WHERE code_product = '$loc' AND (Location = '{$userdate['name_panel']}'or Location = '/all') LIMIT 1"))->fetch(PDO::FETCH_ASSOC);
+        $__q7 = $pdo->prepare("SELECT * FROM product WHERE code_product = ? AND (Location = ?or Location = '/all') LIMIT 1");
+        $__q7->bindValue(1, $loc, PDO::PARAM_STR);
+        $__q7->bindValue(2, $userdate['name_panel'], PDO::PARAM_STR);
+        $__q7->execute();
+        $info_product = $__q7->fetch(PDO::FETCH_ASSOC);
     }
     if (!isset($info_product['price_product'])) {
         sendmessage($from_id, $textbotlang['extracted']['index_php']['confirmError'], $keyboard, 'HTML');
@@ -3976,9 +3983,9 @@ if ($user['step'] == "createusertest" || preg_match('/locationtest_(.*)/', $data
     }
     $affiliatescommission = select("affiliates", "*", null, null, "select");
     $marzbanporsant_one_buy = select("affiliates", "*", null, null, "select");
-    $stmt = $pdo->prepare("SELECT * FROM invoice WHERE name_product != '{$textbotlang['Admin']['adminphp']['db_test_service_name']}'  AND id_user = :id_user AND Status != 'Unpaid'");
+    $stmt = $pdo->prepare("SELECT * FROM invoice WHERE name_product != :mp4  AND id_user = :id_user AND Status != 'Unpaid'");
     $stmt->bindParam(':id_user', $from_id);
-    $stmt->execute();
+    $stmt->execute([':mp4' => $textbotlang['Admin']['adminphp']['db_test_service_name']]);
     $countinvoice = $stmt->rowCount();
     if ($affiliatescommission['status_commission'] == "oncommission" && ($user['affiliates'] != null && intval($user['affiliates']) != 0)) {
         if ($marzbanporsant_one_buy['porsant_one_buy'] == "on_buy_porsant") {
@@ -4114,7 +4121,8 @@ if ($user['step'] == "createusertest" || preg_match('/locationtest_(.*)/', $data
         return;
     }
     if ($SellDiscountlimit['usefirst'] == "1") {
-        $countinvoice = $pdo->query(sprintf("SELECT * FROM invoice WHERE id_user = '%s' AND name_product != '{$textbotlang['Admin']['adminphp']['db_test_service_name']}' AND  (status = 'active' OR status = 'end_of_time'  OR status = 'end_of_volume' OR status = 'sendedwarn' OR Status = 'send_on_hold')", $from_id));
+        $countinvoice = $pdo->prepare("SELECT * FROM invoice WHERE id_user = ? AND name_product != ? AND  (status = 'active' OR status = 'end_of_time'  OR status = 'end_of_volume' OR status = 'sendedwarn' OR Status = 'send_on_hold')");
+        $countinvoice->execute([$from_id, $textbotlang['Admin']['adminphp']['db_test_service_name']]);
         if (($countinvoice)->rowCount() != 0) {
             sendmessage($from_id, $textbotlang['users']['Discount']['firstdiscount'], null, 'HTML');
             return;
@@ -4134,9 +4142,11 @@ if ($user['step'] == "createusertest" || preg_match('/locationtest_(.*)/', $data
         $info_product['Service_time'] = $parts[1];
         $info_product['price_product'] = ($parts[2] * $custompricevalue) + ($parts[1] * $customtimevalueprice);
     } else {
-        $info_product = ($pdo->query("SELECT * FROM product WHERE code_product = :code_product AND (Location = :location OR Location = '/all') LIMIT 1"))->fetch(PDO::FETCH_ASSOC);
-        $info_product->bindParam(':code_product', $user['Processing_value_one'], PDO::PARAM_STR);
-        $info_product->bindParam(':location', $userdate['name_panel'], PDO::PARAM_STR);
+        $stmt = $pdo->prepare("SELECT * FROM product WHERE code_product = :code_product AND (Location = :location OR Location = '/all') LIMIT 1");
+        $stmt->bindValue(':code_product', $user['Processing_value_one'], PDO::PARAM_STR);
+        $stmt->bindValue(':location', $userdate['name_panel'], PDO::PARAM_STR);
+        $stmt->execute();
+        $info_product = $stmt->fetch(PDO::FETCH_ASSOC);
     }
     $result = ($SellDiscountlimit['price'] / 100) * $info_product['price_product'];
 
@@ -4169,7 +4179,8 @@ if ($user['step'] == "createusertest" || preg_match('/locationtest_(.*)/', $data
         sendmessage($from_id, strtr($textbotlang['extracted']['index_php']['bulkPurchaseMinBalance'], ['{PaySetting}' => $PaySetting]), null, 'HTML');
         return;
     }
-    $locationproduct = $pdo->query("SELECT * FROM marzban_panel");
+    $locationproduct = $pdo->prepare("SELECT * FROM marzban_panel");
+    $locationproduct->execute();
     if (($locationproduct)->rowCount() == 0) {
         sendmessage($from_id, $textbotlang['Admin']['managepanel']['nullPanel'], null, 'HTML');
         return;
@@ -4325,7 +4336,11 @@ if ($user['step'] == "createusertest" || preg_match('/locationtest_(.*)/', $data
         $info_product['Service_time'] = $parts[1];
         $info_product['price_product'] = ($parts[2] * $custompricevalue) + ($parts[1] * $customtimevalueprice);
     } else {
-        $info_product = ($pdo->query("SELECT * FROM product WHERE code_product = '$loc' AND (Location = '{$user['Processing_value']}'or Location = '/all') LIMIT 1"))->fetch(PDO::FETCH_ASSOC);
+        $__q8 = $pdo->prepare("SELECT * FROM product WHERE code_product = ? AND (Location = ?or Location = '/all') LIMIT 1");
+        $__q8->bindValue(1, $loc, PDO::PARAM_STR);
+        $__q8->bindValue(2, $user['Processing_value'], PDO::PARAM_STR);
+        $__q8->execute();
+        $info_product = $__q8->fetch(PDO::FETCH_ASSOC);
     }
     $randomString = bin2hex(random_bytes(2));
     $username_ac = generateUsername($from_id, $marzban_list_get['MethodUsername'], $username, $randomString, $text, $marzban_list_get['namecustom'], $user['namecustom']);
@@ -4356,9 +4371,11 @@ if ($user['step'] == "createusertest" || preg_match('/locationtest_(.*)/', $data
         $info_product['price_product'] = ($parts[2] * $custompricevalue) + ($parts[1] * $customtimevalueprice);
         $info_product['data_limit_reset'] = "no_reset";
     } else {
-        $info_product = ($pdo->query("SELECT * FROM product WHERE code_product = :code_product AND (Location = :location OR Location = '/all') LIMIT 1"))->fetch(PDO::FETCH_ASSOC);
-        $info_product->bindParam(':code_product', $user['Processing_value_one'], PDO::PARAM_STR);
-        $info_product->bindParam(':location', $user['Processing_value'], PDO::PARAM_STR);
+        $stmt = $pdo->prepare("SELECT * FROM product WHERE code_product = :code_product AND (Location = :location OR Location = '/all') LIMIT 1");
+        $stmt->bindValue(':code_product', $user['Processing_value_one'], PDO::PARAM_STR);
+        $stmt->bindValue(':location', $user['Processing_value'], PDO::PARAM_STR);
+        $stmt->execute();
+        $info_product = $stmt->fetch(PDO::FETCH_ASSOC);
     }
     if (empty($info_product['price_product']) || empty($info_product['price_product']))
         return;
@@ -4560,8 +4577,9 @@ if ($user['step'] == "createusertest" || preg_match('/locationtest_(.*)/', $data
 } elseif ($user['step'] == "get_step_payment") {
     if ($datain == "cart_to_offline") {
         $PaySetting = select("PaySetting", "ValuePay", "NamePay", "statuscardautoconfirm", "select")['ValuePay'];
-        $checkpay = $pdo->query("SELECT * FROM Payment_report WHERE id = :user_id AND payment_Status = 'Unpaid'");
-        $checkpay->bindParam(':user_id', $from_id, PDO::PARAM_STR);
+        $checkpay = $pdo->prepare("SELECT * FROM Payment_report WHERE id = :user_id AND payment_Status = 'Unpaid'");
+        $checkpay->bindValue(':user_id', $from_id, PDO::PARAM_STR);
+        $checkpay->execute();
         if (($checkpay)->rowCount() != 0) {
             sendmessage($from_id, $textbotlang['Admin']['SettingPayment']['isSetPay'], null, 'HTML');
             return;
@@ -4574,7 +4592,8 @@ if ($user['step'] == "createusertest" || preg_match('/locationtest_(.*)/', $data
             sendmessage($from_id, strtr($textbotlang['extracted']['index_php']['depositAmountRange'], ['{mainbalance}' => $mainbalance, '{maxbalance}' => $maxbalance]), null, 'HTML');
             return;
         }
-        $cardQuery = $pdo->query("SELECT * FROM card_number  ORDER BY RAND() LIMIT 1");
+        $cardQuery = $pdo->prepare("SELECT * FROM card_number  ORDER BY RAND() LIMIT 1");
+        $cardQuery->execute();
         if ($cardQuery === false) {
             error_log('Failed to fetch card_number data: ' . implode(' ', $pdo->errorInfo()));
             sendmessage($from_id, $textbotlang['extracted']['index_php']['bankCardRetrieveError'], null, 'HTML');
@@ -5274,7 +5293,10 @@ if ($user['step'] == "createusertest" || preg_match('/locationtest_(.*)/', $data
 if (preg_match('/Confirmpay_user_(\w+)_(\w+)/', $datain, $dataget)) {
     $id_payment = $dataget[1];
     $id_order = $dataget[2];
-    $Payment_report = ($pdo->query("SELECT * FROM Payment_report WHERE id_order = '$id_order' LIMIT 1"))->fetch(PDO::FETCH_ASSOC);
+    $__q9 = $pdo->prepare("SELECT * FROM Payment_report WHERE id_order = ? LIMIT 1");
+    $__q9->bindValue(1, $id_order, PDO::PARAM_STR);
+    $__q9->execute();
+    $Payment_report = $__q9->fetch(PDO::FETCH_ASSOC);
     if ($Payment_report['payment_Status'] == "paid") {
         telegram('answerCallbackQuery', array(
             'callback_query_id' => $callback_query_id,
@@ -5294,7 +5316,10 @@ if (preg_match('/Confirmpay_user_(\w+)_(\w+)/', $datain, $dataget)) {
         ));
         update("Payment_report", "payment_Status", "paid", "id_order", $Payment_report['id_order']);
         DirectPayment($Payment_report['id_order']);
-        $Balance_id = ($pdo->query("SELECT * FROM user WHERE id = '{$Payment_report['id_user']}' LIMIT 1"))->fetch(PDO::FETCH_ASSOC);
+        $__q10 = $pdo->prepare("SELECT * FROM user WHERE id = ? LIMIT 1");
+        $__q10->bindValue(1, $Payment_report['id_user'], PDO::PARAM_STR);
+        $__q10->execute();
+        $Balance_id = $__q10->fetch(PDO::FETCH_ASSOC);
         $Payment_report['price'] = number_format($Payment_report['price'], 0);
         $text_report = sprintf($textbotlang['hardcoded']['newPaymentAdmin'], $from_id, $Payment_report['price']);
         $pricecashback = select("PaySetting", "ValuePay", "NamePay", "chashbackiranpay2", "select")['ValuePay'];
@@ -5455,7 +5480,12 @@ if (preg_match('/^sendresidcart-(.*)/', $datain, $dataget)) {
             $prodcut['Volume_constraint'] = $service_other['volumebuy'];
         } else {
             $nameloc = select("invoice", "*", "username", $usernamepanel, "select");
-            $prodcut = ($pdo->query("SELECT * FROM product WHERE (Location = '{$nameloc['Service_location']}' OR Location = '/all') AND agent= '{$user['agent']}' AND code_product = '$codeproduct'"))->fetch(PDO::FETCH_ASSOC);
+            $__q11 = $pdo->prepare("SELECT * FROM product WHERE (Location = ? OR Location = '/all') AND agent= ? AND code_product = ?");
+            $__q11->bindValue(1, $nameloc['Service_location'], PDO::PARAM_STR);
+            $__q11->bindValue(2, $user['agent'], PDO::PARAM_STR);
+            $__q11->bindValue(3, $codeproduct, PDO::PARAM_STR);
+            $__q11->execute();
+            $prodcut = $__q11->fetch(PDO::FETCH_ASSOC);
         }
         $Confirm_pay = json_encode([
             'inline_keyboard' => [
@@ -5575,7 +5605,12 @@ if (preg_match('/^sendresidcart-(.*)/', $datain, $dataget)) {
             $prodcut['Volume_constraint'] = $service_other['volumebuy'];
         } else {
             $nameloc = select("invoice", "*", "username", $usernamepanel, "select");
-            $prodcut = ($pdo->query("SELECT * FROM product WHERE (Location = '{$nameloc['Service_location']}' OR Location = '/all') AND agent= '{$user['agent']}' AND code_product = '$codeproduct'"))->fetch(PDO::FETCH_ASSOC);
+            $__q12 = $pdo->prepare("SELECT * FROM product WHERE (Location = ? OR Location = '/all') AND agent= ? AND code_product = ?");
+            $__q12->bindValue(1, $nameloc['Service_location'], PDO::PARAM_STR);
+            $__q12->bindValue(2, $user['agent'], PDO::PARAM_STR);
+            $__q12->bindValue(3, $codeproduct, PDO::PARAM_STR);
+            $__q12->execute();
+            $prodcut = $__q12->fetch(PDO::FETCH_ASSOC);
         }
         $Confirm_pay = json_encode([
             'inline_keyboard' => [
@@ -6070,9 +6105,9 @@ if (preg_match('/^sendresidcart-(.*)/', $datain, $dataget)) {
         sendmessage($from_id, $textbotlang['extracted']['index_php']['buttonDisabledForYou'], null, 'HTML');
         return;
     }
-    $stmt = $pdo->prepare("SELECT * FROM invoice WHERE name_product != '{$textbotlang['Admin']['adminphp']['db_test_service_name']}'  AND id_user = :id_user AND status != 'Unpaid'");
+    $stmt = $pdo->prepare("SELECT * FROM invoice WHERE name_product != :mp5  AND id_user = :id_user AND status != 'Unpaid'");
     $stmt->bindParam(':id_user', $from_id);
-    $stmt->execute();
+    $stmt->execute([':mp5' => $textbotlang['Admin']['adminphp']['db_test_service_name']]);
     $countinvoice = $stmt->rowCount();
     if (intval($setting['statusfirstwheel']) == 1 and $countinvoice != 0) {
         sendmessage($from_id, $textbotlang['extracted']['index_php']['noPurchaseUsersOnly'], null, 'HTML');
@@ -6186,7 +6221,7 @@ if (preg_match('/^sendresidcart-(.*)/', $datain, $dataget)) {
     $page = 1;
     $items_per_page = 20;
     $start_index = ($page - 1) * $items_per_page;
-    $result = $pdo->query("SELECT * FROM invoice WHERE id_user = :from_id AND (status = 'active' OR status = 'end_of_time'  OR status = 'end_of_volume' OR status = 'sendedwarn' OR status = 'send_on_hold') ORDER BY time_sell DESC LIMIT :start_index, :items_per_page");
+    $result = $pdo->prepare("SELECT * FROM invoice WHERE id_user = :from_id AND (status = 'active' OR status = 'end_of_time'  OR status = 'end_of_volume' OR status = 'sendedwarn' OR status = 'send_on_hold') ORDER BY time_sell DESC LIMIT :start_index, :items_per_page");
     $result->bindParam(':from_id', $from_id, PDO::PARAM_STR);
     $result->bindParam(':start_index', $start_index, PDO::PARAM_INT);
     $result->bindParam(':items_per_page', $items_per_page, PDO::PARAM_INT);
@@ -6247,7 +6282,7 @@ if (preg_match('/^sendresidcart-(.*)/', $datain, $dataget)) {
         $next_page = $page + 1;
     }
     $start_index = ($next_page - 1) * $items_per_page;
-    $result = $pdo->query("SELECT * FROM invoice WHERE id_user = :from_id AND (status = 'active' OR status = 'end_of_time'  OR status = 'end_of_volume' OR status = 'sendedwarn' OR Status = 'send_on_hold') ORDER BY time_sell DESC LIMIT :start_index, :items_per_page");
+    $result = $pdo->prepare("SELECT * FROM invoice WHERE id_user = :from_id AND (status = 'active' OR status = 'end_of_time'  OR status = 'end_of_volume' OR status = 'sendedwarn' OR Status = 'send_on_hold') ORDER BY time_sell DESC LIMIT :start_index, :items_per_page");
     $result->bindParam(':from_id', $from_id, PDO::PARAM_STR);
     $result->bindParam(':start_index', $start_index, PDO::PARAM_INT);
     $result->bindParam(':items_per_page', $items_per_page, PDO::PARAM_INT);
@@ -6309,7 +6344,7 @@ if (preg_match('/^sendresidcart-(.*)/', $datain, $dataget)) {
         $previous_page = $page - 1;
     }
     $start_index = ($previous_page - 1) * $items_per_page;
-    $result = $pdo->query("SELECT * FROM invoice WHERE id_user = :from_id AND (status = 'active' OR status = 'end_of_time'  OR status = 'end_of_volume' OR status = 'sendedwarn' OR Status = 'send_on_hold') ORDER BY time_sell DESC LIMIT :start_index, :items_per_page");
+    $result = $pdo->prepare("SELECT * FROM invoice WHERE id_user = :from_id AND (status = 'active' OR status = 'end_of_time'  OR status = 'end_of_volume' OR status = 'sendedwarn' OR Status = 'send_on_hold') ORDER BY time_sell DESC LIMIT :start_index, :items_per_page");
     $result->bindParam(':from_id', $from_id, PDO::PARAM_STR);
     $result->bindParam(':start_index', $start_index, PDO::PARAM_INT);
     $result->bindParam(':items_per_page', $items_per_page, PDO::PARAM_INT);

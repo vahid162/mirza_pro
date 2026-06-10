@@ -202,9 +202,9 @@ switch ($action) {
             sendJsonResponse(false, "user not found", []);
         } else {
             $user_data = select("user", "*", "id", $invoice['id_user'], "select");
-            $stmt = $pdo->prepare("SELECT SUM(price_product) as total_order,COUNT(username) as count_order FROM invoice WHERE name_product != '{$textbotlang['Admin']['adminphp']['db_test_service_name']}' AND  id_user = :user_id AND Status != 'Unpaid'");
+            $stmt = $pdo->prepare("SELECT SUM(price_product) as total_order,COUNT(username) as count_order FROM invoice WHERE name_product != :mp1 AND  id_user = :user_id AND Status != 'Unpaid'");
             $stmt->bindValue(':user_id', intval($invoice['id_user']), PDO::PARAM_INT);
-            $stmt->execute();
+            $stmt->execute([':mp1' => $textbotlang['Admin']['adminphp']['db_test_service_name']]);
             $order_fince = $stmt->fetch(PDO::FETCH_ASSOC);
             $data_user = $ManagePanel->DataUser($invoice['Service_location'], $invoice['username']);
             $invoice['number'] = $user_data['number'];
@@ -236,8 +236,8 @@ switch ($action) {
             if (!isset($data['amount'])) {
                 sendJsonResponse(false, "id_invoice empty", []);
             }
-            $stmt = $pdo->prepare("UPDATE user SET Balance =  Balance + :balance WHERE id = '{$invoice['id_user']}'");
-            $stmt->execute([':balance' => $data['amount']]);
+            $stmt = $pdo->prepare("UPDATE user SET Balance =  Balance + :balance WHERE id = :mp2");
+            $stmt->execute([':mp2' => $invoice['id_user'], ':balance' => $data['amount']]);
             update("invoice", "Status", "removebyadmin", "id_invoice", $data["id_invoice"]);
             $ManagePanel->RemoveUser($invoice['Service_location'], $invoice['username']);
         } elseif ($data['type'] == "three") {

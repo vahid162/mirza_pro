@@ -11,8 +11,8 @@ $setting = select("setting", "*");
 $textbotlang = languagechange();
 $month_date_time_start = time() - 86400;
 $month_date_time_start = date('Y/m/d H:i:s',$month_date_time_start);
-$stmt = $pdo->prepare("SELECT * FROM Payment_report WHERE time < '$month_date_time_start' AND payment_Status = 'Unpaid'");
-$stmt->execute();
+$stmt = $pdo->prepare("SELECT * FROM Payment_report WHERE time < :mp1 AND payment_Status = 'Unpaid'");
+$stmt->execute([':mp1' => $month_date_time_start]);
 
 while ($result = $stmt->fetch(PDO::FETCH_ASSOC)) {
     $status_var = [

@@ -13,6 +13,19 @@ use Endroid\QrCode\RoundBlockSizeMode;
 use Endroid\QrCode\Writer\PngWriter;
 
 #-----------shell helper utilities------------#
+function assertSqlIdentifier($name, $allowFieldExpr = false)
+{
+    if ($name === null) {
+        return;
+    }
+    // Identifiers (table/column names) cannot be bound as parameters, so they
+    // are validated against a strict allow-list to prevent SQL injection.
+    $pattern = $allowFieldExpr ? '/^[\p{L}\p{N}_*,()\s.`]+$/u' : '/^[\p{L}\p{N}_.`]+$/u';
+    if (!preg_match($pattern, (string) $name)) {
+        error_log('Blocked unsafe SQL identifier: ' . $name);
+        throw new InvalidArgumentException('Invalid SQL identifier');
+    }
+}
 function isShellExecAvailable()
 {
     static $isAvailable;
@@ -324,6 +337,10 @@ function update($table, $field, $newValue, $whereField = null, $whereValue = nul
 {
     global $pdo, $user;
 
+    assertSqlIdentifier($table);
+    assertSqlIdentifier($field, true);
+    assertSqlIdentifier($whereField);
+
     $valueToStore = normaliseUpdateValue($newValue);
 
     ensureColumnExistsForUpdate($table, $field, $valueToStore);
@@ -410,6 +427,10 @@ function clearSelectCache($table = null)
 function select($table, $field, $whereField = null, $whereValue = null, $type = "select", $options = [])
 {
     global $pdo;
+
+    assertSqlIdentifier($table);
+    assertSqlIdentifier($field, true);
+    assertSqlIdentifier($whereField);
 
     $useCache = true;
     if (is_array($options) && array_key_exists('cache', $options)) {
@@ -848,9 +869,9 @@ function DirectPayment($order_id, $image = 'images.jpg')
         }
         $affiliatescommission = select("affiliates", "*", null, null, "select");
         $marzbanporsant_one_buy = select("affiliates", "*", null, null, "select");
-        $stmt = $pdo->prepare("SELECT * FROM invoice WHERE name_product != '{$textbotlang['Admin']['adminphp']['db_test_service_name']}'  AND id_user = :id_user AND Status != 'Unpaid'");
+        $stmt = $pdo->prepare("SELECT * FROM invoice WHERE name_product != :mp1  AND id_user = :id_user AND Status != 'Unpaid'");
         $stmt->bindParam(':id_user', $Balance_id['id']);
-        $stmt->execute();
+        $stmt->execute([':mp1' => $textbotlang['Admin']['adminphp']['db_test_service_name']]);
         $countinvoice = $stmt->rowCount();
         if ($affiliatescommission['status_commission'] == "oncommission" && ($Balance_id['affiliates'] != null && intval($Balance_id['affiliates']) != 0)) {
             if ($marzbanporsant_one_buy['porsant_one_buy'] == "on_buy_porsant") {
@@ -979,8 +1000,8 @@ function DirectPayment($order_id, $image = 'images.jpg')
             $prodcut['Service_time'] = $service_other['Service_time'];
             $prodcut['Volume_constraint'] = $service_other['volumebuy'];
         } else {
-            $stmt = $pdo->prepare("SELECT * FROM product WHERE (Location = '{$nameloc['Service_location']}' OR Location = '/all') AND agent= '{$Balance_id['agent']}' AND code_product = '$codeproduct'");
-            $stmt->execute();
+            $stmt = $pdo->prepare("SELECT * FROM product WHERE (Location = :mp2 OR Location = '/all') AND agent= :mp3 AND code_product = :mp4");
+            $stmt->execute([':mp2' => $nameloc['Service_location'], ':mp3' => $Balance_id['agent'], ':mp4' => $codeproduct]);
             $prodcut = $stmt->fetch(PDO::FETCH_ASSOC);
         }
         if ($nameloc['name_product'] == $textbotlang['hardcoded']['testServiceNameFn']) {
@@ -1283,6 +1304,9 @@ function savedata($type, $namefiled, $valuefiled)
 function addFieldToTable($tableName, $fieldName, $defaultValue = null, $datatype = "VARCHAR(500)")
 {
     global $pdo;
+
+    assertSqlIdentifier($tableName);
+    assertSqlIdentifier($fieldName);
     $stmt = $pdo->prepare("SELECT COUNT(*) as count FROM information_schema.tables WHERE table_name = :tableName");
     $stmt->bindParam(':tableName', $tableName);
     $stmt->execute();
@@ -1290,7 +1314,7 @@ function addFieldToTable($tableName, $fieldName, $defaultValue = null, $datatype
     if ($tableExists['count'] == 0)
         return;
     $stmt = $pdo->prepare("SELECT COUNT(*) as count FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = ? AND TABLE_NAME = ? AND COLUMN_NAME = ?");
-    $stmt->execute([$pdo->query("SELECT DATABASE()")->fetchColumn(), $tableName, $fieldName]);
+    $stmt->execute([$pdo->prepare("SELECT DATABASE()")->fetchColumn(), $tableName, $fieldName]);
     $filedExists = $stmt->fetch(PDO::FETCH_ASSOC);
     if ($filedExists['count'] != 0)
         return;
