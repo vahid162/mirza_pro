@@ -1376,7 +1376,7 @@ EOF
 </VirtualHost>
 EOF
         run_step "Configuring Apache virtual hosts" \
-            "a2ensite '${DOMAIN_NAME}.conf' && a2ensite '${DOMAIN_NAME}-ssl.conf' ; a2dissite 000-default.conf 2>/dev/null ; a2dissite 000-default-le-ssl.conf 2>/dev/null ; a2dissite default-ssl.conf 2>/dev/null ; rm -f /etc/apache2/sites-enabled/000-default.conf /etc/apache2/sites-enabled/000-default-le-ssl.conf /etc/apache2/sites-enabled/default-ssl.conf ; rm -f /etc/apache2/sites-available/000-default.conf /etc/apache2/sites-available/000-default-le-ssl.conf /etc/apache2/sites-available/default-ssl.conf ; a2enmod ssl && systemctl restart apache2" \
+            "a2ensite '${DOMAIN_NAME}.conf' && a2ensite '${DOMAIN_NAME}-ssl.conf' ; a2dissite 000-default.conf 2>/dev/null ; a2dissite 000-default-le-ssl.conf 2>/dev/null ; a2dissite default-ssl.conf 2>/dev/null ; rm -f /etc/apache2/sites-enabled/000-default.conf /etc/apache2/sites-enabled/000-default-le-ssl.conf /etc/apache2/sites-enabled/default-ssl.conf ; rm -f /etc/apache2/sites-available/000-default.conf /etc/apache2/sites-available/000-default-le-ssl.conf /etc/apache2/sites-available/default-ssl.conf ; a2enmod ssl ; a2enmod rewrite ; systemctl restart apache2" \
             || { show_step_error; install_pause "Configuring Apache virtual hosts"; }
         mark_phase VHOST
     else
@@ -1758,6 +1758,8 @@ EOF
             sleep 3
             sudo a2enmod ssl 2>/dev/null || true
         fi
+        sudo a2enmod rewrite 2>/dev/null || true
+        sudo a2enmod ssl 2>/dev/null || true
         if sudo apache2ctl configtest >/dev/null 2>&1; then
             sudo systemctl restart apache2 || {
                 echo -e "\e[91mWarning: Failed to restart Apache2 after updating VirtualHost.\033[0m"
