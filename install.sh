@@ -1357,11 +1357,6 @@ function install_bot() {
             run_step "Requesting SSL certificate (Let's Encrypt)" \
                 "certbot certonly --standalone --non-interactive --agree-tos --register-unsafely-without-email --preferred-challenges http -d $DOMAIN_NAME" \
                 || { show_step_error; install_pause "Requesting SSL certificate"; }
-            run_step "Installing Apache certbot plugin" "apt install python3-certbot-apache -y" \
-                || { show_step_error; install_pause "Installing certbot apache plugin"; }
-            run_step "Configuring SSL on Apache" \
-                "certbot --apache --non-interactive --agree-tos --register-unsafely-without-email --redirect --preferred-challenges http -d $DOMAIN_NAME" \
-                || { show_step_error; install_pause "Configuring SSL with certbot"; }
         fi
         run_step "Enabling & starting Apache" "systemctl enable apache2 && systemctl start apache2" \
             || { show_step_error; install_pause "Starting Apache"; }
@@ -1783,13 +1778,14 @@ EOF
             sleep 3
             sudo a2enmod ssl 2>/dev/null || true
         fi
-        if sudo apache2ctl configtest 2>/dev/null | grep -q "Syntax OK"; then
+        if sudo apache2ctl configtest >/dev/null 2>&1; then
             sudo systemctl restart apache2 || {
                 echo -e "\e[91mWarning: Failed to restart Apache2 after updating VirtualHost.\033[0m"
             }
             echo -e "\e[92mVirtualHost configuration updated and Apache restarted.\033[0m"
         else
             echo -e "\e[93mWarning: Apache configuration test failed. Skipping restart.\033[0m"
+            sudo apache2ctl configtest
         fi
     fi
     if [ -f "$CONFIG_PATH" ]; then
