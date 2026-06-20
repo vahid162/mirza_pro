@@ -2661,7 +2661,7 @@ We hope you had a good experience with the ease and speed of your service. If yo
                         'sendMessageText' => '📌 Send the text of your message',
                         'messageSentSuccess' => 'The message was sent successfully',
                         'messageSentForRequestReview' => '✅  Your message for this request was sent successfully. It will be answered after review.',
-                        'notSentLabel' => '🔴 Not sent 🔴',
+                        'notSentLabel' => '❌<b> Not sent </b>❌',
                         'confirmedByAdmin' => '✅ Approved by admin',
                         'roleNormal' => 'Regular',
                         'roleAgent' => 'Agent',
@@ -3115,7 +3115,8 @@ Service deletion reason : %s',
 
 🔹 Before sending a report, view the connection tutorials. ( /help )',
                 'enterAmountToman' => '💸 Enter the amount in Toman:
-✅  The minimum amount is %s and the maximum is %s Toman',
+
+⚠️  The minimum amount is <b>%s</b> and the maximum is <b>%s</b> Toman',
                 'extraTimeError' => 'Error purchasing extra volume
 Panel name : %s
 Service username : %s

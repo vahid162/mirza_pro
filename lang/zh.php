@@ -2661,7 +2661,7 @@ nowpayments.io
                         'sendMessageText' => '📌 请发送您的消息文本',
                         'messageSentSuccess' => '消息发送成功',
                         'messageSentForRequestReview' => '✅  您针对此请求的消息发送成功。审核后将给您回复。',
-                        'notSentLabel' => '🔴 未发送 🔴',
+                        'notSentLabel' => '❌<b> 未发送 </b>❌',
                         'confirmedByAdmin' => '✅ 已由管理员批准',
                         'roleNormal' => '普通',
                         'roleAgent' => '代理',
@@ -3115,7 +3115,8 @@ nowpayments.io
 
 🔹 发送报告前，请查看连接教程。( /help )',
                 'enterAmountToman' => '💸 请输入金额（托曼）：
-✅  最低金额为 %s，最高为 %s 托曼',
+
+⚠️  最低金额为 <b>%s</b>，最高为 <b>%s</b> 托曼',
                 'extraTimeError' => '购买额外流量出错
 面板名称：%s
 服务用户名：%s
