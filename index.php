@@ -4897,7 +4897,7 @@ if ($user['step'] == "createusertest" || preg_match('/locationtest_(.*)/', $data
         $dateacc = date('Y/m/d H:i:s');
         $randomString = bin2hex(random_bytes(5));
         $invoice = "{$user['Processing_value_tow']}|{$user['Processing_value_one']}";
-        $pay = nowPayments('invoice', $usdprice, $randomString, "order");
+        $pay = nowPayments('invoice', $usdprice, $randomString, 'TopUp - ' . $from_id);
         $stmt = $pdo->prepare("INSERT INTO Payment_report (id_user,id_order,time,price,payment_Status,Payment_Method,id_invoice,dec_not_confirmed) VALUES (?,?,?,?,?,?,?,?)");
         $payment_Status = "Unpaid";
         $Payment_Method = "nowpayment";
