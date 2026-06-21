@@ -1668,10 +1668,65 @@ function languagechange($path_dir = null, string $lang = 'fa')
     $allowed = ['fa', 'en', 'ar', 'ru', 'zh'];
     if (!in_array($lang, $allowed, true))
         $lang = 'fa';
-    if ($path_dir) {
-        return require $path_dir . '/lang/' . $lang . '.php';
+    $base_dir = $path_dir ?: __DIR__;
+    $texts = require $base_dir . '/lang/' . $lang . '.php';
+    if (is_array($texts))
+        bottext_apply_overrides($texts, $lang);
+    return $texts;
+}
+function bottext_overrides_file($lang)
+{
+    return __DIR__ . '/lang/overrides/' . preg_replace('/[^a-z]/', '', (string) $lang) . '.json';
+}
+function bottext_get_overrides($lang)
+{
+    $file = bottext_overrides_file($lang);
+    if (!is_file($file))
+        return [];
+    $data = json_decode((string) @file_get_contents($file), true);
+    return is_array($data) ? $data : [];
+}
+function bottext_apply_overrides(array &$base, $lang)
+{
+    foreach (bottext_get_overrides($lang) as $dotted => $value) {
+        if (!is_string($value))
+            continue;
+        $keys = explode('.', $dotted);
+        $last = array_pop($keys);
+        $ref = &$base;
+        $ok = true;
+        foreach ($keys as $k) {
+            if (!is_array($ref)) {
+                $ok = false;
+                break;
+            }
+            if (!isset($ref[$k]) || !is_array($ref[$k]))
+                $ref[$k] = [];
+            $ref = &$ref[$k];
+        }
+        if ($ok && is_array($ref))
+            $ref[$last] = $value;
+        unset($ref);
     }
-    return require __DIR__ . '/lang/' . $lang . '.php';
+}
+function bottext_put_overrides($lang, array $map)
+{
+    $file = bottext_overrides_file($lang);
+    if (!is_dir(dirname($file)))
+        @mkdir(dirname($file), 0775, true);
+    if (empty($map)) {
+        if (is_file($file))
+            @unlink($file);
+        return true;
+    }
+    $tmp = $file . '.' . uniqid('tmp', true);
+    if (@ز($tmp, json_encode($map, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT), LOCK_EX) === false)
+        return false;
+    if (!@rename($tmp, $file)) {
+        @unlink($tmp);
+        return false;
+    }
+    return true;
 }
 function generateAuthStr($length = 10)
 {

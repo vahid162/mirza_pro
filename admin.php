@@ -6,6 +6,120 @@ $text_panel_admin_login_template = sprintf($textbotlang['Admin']['adminphp']['ms
 if (!in_array($from_id, $admin_ids))
     return;
 
+$bt_open = $text === $textbotlang['bottext']['open_button'];
+$bt_stp = strncmp((string) ($user['step'] ?? ''), 'bottext_edit:', 13) === 0;
+if ($bt_open || strpos((string) $datain, 'bt_') === 0 || $bt_stp) {
+    $bt_codes = ['fa', 'en', 'ar', 'ru', 'zh'];
+    $bt_p = explode('|', (string) $datain);
+    $bt_lang = in_array($bt_p[1] ?? '', $bt_codes, true) ? $bt_p[1] : (in_array(($user['lang'] ?? 'fa'), $bt_codes, true) ? $user['lang'] : 'fa');
+    $bt_idx = (int) ($bt_p[2] ?? -1);
+    $bt_view = '';
+    $bt_edit = false;
+    $bt_pre = '';
+
+    if ($bt_open) {
+        step('home', $from_id);
+        $bt_view = 'list';
+    } elseif ($bt_stp) {
+        $bt_s = explode(':', (string) $user['step']);
+        $bt_lang = in_array($bt_s[1] ?? '', $bt_codes, true) ? $bt_s[1] : 'fa';
+        $bt_idx = (int) ($bt_s[2] ?? -1);
+        step('home', $from_id);
+        if (!isset($textbotlang['bottext']['items'][$bt_idx])) {
+            sendmessage($from_id, $textbotlang['bottext']['msg_session'], $keyboardadmin, 'HTML');
+        } elseif (trim((string) $text) === '') {
+            sendmessage($from_id, $textbotlang['bottext']['msg_empty'], $keyboardadmin, 'HTML');
+            step('bottext_edit:' . $bt_lang . ':' . $bt_idx, $from_id);
+        } else {
+            $bt_map = bottext_get_overrides($bt_lang);
+            $bt_map[$textbotlang['bottext']['items'][$bt_idx]['key']] = (string) $text;
+            bottext_put_overrides($bt_lang, $bt_map);
+            $bt_view = 'leaf';
+            $bt_pre = $textbotlang['bottext']['msg_saved'] . "\n\n";
+        }
+    } elseif ($bt_p[0] === 'bt_close') {
+        if (is_numeric($message_id))
+            deletemessage($from_id, $message_id);
+        step('home', $from_id);
+        sendmessage($from_id, $textbotlang['bottext']['msg_closed'], $keyboardadmin, 'HTML');
+    } elseif ($bt_p[0] === 'bt_lang' || $bt_p[0] === 'bt_back') {
+        $bt_view = 'list';
+        $bt_edit = true;
+    } elseif ($bt_p[0] === 'bt_go') {
+        $bt_view = 'leaf';
+        $bt_edit = true;
+    } elseif ($bt_p[0] === 'bt_edit') {
+        step('bottext_edit:' . $bt_lang . ':' . $bt_idx, $from_id);
+        sendmessage($from_id, $textbotlang['bottext']['msg_ask'], $backadmin, 'HTML');
+    } elseif ($bt_p[0] === 'bt_reset') {
+        $bt_key = $textbotlang['bottext']['items'][$bt_idx]['key'] ?? '';
+        if ($bt_key !== '') {
+            $bt_map = bottext_get_overrides($bt_lang);
+            unset($bt_map[$bt_key]);
+            bottext_put_overrides($bt_lang, $bt_map);
+        }
+        $bt_view = 'leaf';
+        $bt_edit = true;
+        $bt_pre = $textbotlang['bottext']['msg_reset'] . "\n\n";
+    }
+
+    if ($bt_view !== '') {
+        $bt_file = __DIR__ . '/lang/' . $bt_lang . '.php';
+        if (!is_file($bt_file))
+            $bt_file = __DIR__ . '/lang/fa.php';
+        $bt_base = require $bt_file;
+        $bt_ov = bottext_get_overrides($bt_lang);
+        $bt_kb = [];
+    }
+
+    if ($bt_view === 'list') {
+        $bt_row = [];
+        foreach (($textbotlang['bottext']['langs'] ?? []) as $bt_c => $bt_l) {
+            if (!is_file(__DIR__ . '/lang/' . $bt_c . '.php'))
+                continue;
+            $bt_row[] = ['text' => ($bt_c === $bt_lang ? '🔹 ' : '') . $bt_l, 'callback_data' => 'bt_lang|' . $bt_c];
+        }
+        if ($bt_row)
+            $bt_kb[] = $bt_row;
+        foreach (($textbotlang['bottext']['items'] ?? []) as $bt_i => $bt_it) {
+            $bt_k = explode('.', $bt_it['key'], 2);
+            if (!array_key_exists($bt_it['key'], $bt_ov) && !isset($bt_base[$bt_k[0]][$bt_k[1] ?? '']))
+                continue;
+            $bt_mark = array_key_exists($bt_it['key'], $bt_ov) ? '✏️ ' : '▫️ ';
+            $bt_kb[] = [['text' => $bt_mark . $bt_it['label'], 'callback_data' => 'bt_go|' . $bt_lang . '|' . $bt_i]];
+        }
+        $bt_kb[] = [['text' => $textbotlang['bottext']['btn_close'], 'callback_data' => 'bt_close']];
+        $bt_txt = strtr($textbotlang['bottext']['home_text'], ['{lang}' => htmlspecialchars($bt_lang, ENT_QUOTES)]);
+        $bt_json = json_encode(['inline_keyboard' => $bt_kb], JSON_UNESCAPED_UNICODE);
+        if ($bt_edit)
+            Editmessagetext($from_id, $message_id, $bt_txt, $bt_json);
+        else
+            sendmessage($from_id, $bt_txt, $bt_json, 'HTML');
+    } elseif ($bt_view === 'leaf') {
+        $bt_it = $textbotlang['bottext']['items'][$bt_idx] ?? ['label' => '', 'key' => ''];
+        $bt_k = explode('.', $bt_it['key'], 2);
+        $bt_def = $bt_base[$bt_k[0]][$bt_k[1] ?? ''] ?? '';
+        $bt_is = array_key_exists($bt_it['key'], $bt_ov);
+        $bt_cur = $bt_is ? $bt_ov[$bt_it['key']] : $bt_def;
+        $bt_txt = strtr($textbotlang['bottext']['leaf_text'], [
+            '{label}'   => htmlspecialchars($bt_it['label'], ENT_QUOTES),
+            '{status}'  => $bt_is ? $textbotlang['bottext']['leaf_custom'] : $textbotlang['bottext']['leaf_default'],
+            '{current}' => htmlspecialchars((string) $bt_cur, ENT_QUOTES),
+        ]);
+        $bt_kb[] = [['text' => $textbotlang['bottext']['btn_send_new'], 'callback_data' => 'bt_edit|' . $bt_lang . '|' . $bt_idx]];
+        if ($bt_is)
+            $bt_kb[] = [['text' => $textbotlang['bottext']['btn_reset'], 'callback_data' => 'bt_reset|' . $bt_lang . '|' . $bt_idx]];
+        $bt_kb[] = [['text' => $textbotlang['bottext']['btn_back'], 'callback_data' => 'bt_back|' . $bt_lang]];
+        $bt_kb[] = [['text' => $textbotlang['bottext']['btn_close'], 'callback_data' => 'bt_close']];
+        $bt_json = json_encode(['inline_keyboard' => $bt_kb], JSON_UNESCAPED_UNICODE);
+        if ($bt_edit)
+            Editmessagetext($from_id, $message_id, $bt_pre . $bt_txt, $bt_json);
+        else
+            sendmessage($from_id, $bt_pre . $bt_txt, $bt_json, 'HTML');
+    }
+    return;
+}
+
 $domainhostsEscaped = htmlspecialchars($domainhosts, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
 
 $miniAppInstructionText = sprintf($textbotlang['Admin']['adminphp']['msg_mini_app_instruction'], $domainhostsEscaped);
