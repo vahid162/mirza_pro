@@ -2449,7 +2449,6 @@ ID пользователя: %s
                 'resetVolumeAddTime' => 'Сброс объёма и добавление времени',
                 'resetVolumeTime' => 'Сброс объёма и времени',
                 'searchOrder' => '🛍 Поиск заказа',
-                'searchUser' => '👁‍🗨 Поиск пользователя',
                 'searchUserBtn' => '🔍 Поиск пользователя',
                 'selectCurrentService' => '📍 Выбрать текущий сервис',
                 'selectCustomName' => '👤 Выбрать произвольное имя',

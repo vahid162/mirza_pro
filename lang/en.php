@@ -2448,7 +2448,6 @@ We hope you had a good experience with the ease and speed of your service. If yo
                 'resetVolumeAddTime' => 'Reset volume and add time',
                 'resetVolumeTime' => 'Reset volume and time',
                 'searchOrder' => '🛍 Search order',
-                'searchUser' => '👁‍🗨 Search user',
                 'searchUserBtn' => '🔍 Search user',
                 'selectCurrentService' => '📍 Select current service',
                 'selectCustomName' => '👤 Choose a custom name',

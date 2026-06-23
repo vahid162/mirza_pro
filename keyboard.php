@@ -160,7 +160,7 @@ if ($adminrulecheck['rule'] == "Seller") {
 if ($adminrulecheck['rule'] == "support") {
     $keyboardadmin = json_encode([
         'keyboard' => [
-            [['text' => $textbotlang['keyboard']['manageUser']], ['text' => $textbotlang['keyboard']['searchUser']]],
+            [['text' => $textbotlang['keyboard']['manageUser']]],
             [['text' => $textbotlang['users']['backbtn']]]
         ],
         'resize_keyboard' => true

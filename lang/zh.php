@@ -2448,7 +2448,6 @@ nowpayments.io
                 'resetVolumeAddTime' => '重置流量并添加时间',
                 'resetVolumeTime' => '重置流量和时间',
                 'searchOrder' => '🛍 搜索订单',
-                'searchUser' => '👁‍🗨 搜索用户',
                 'searchUserBtn' => '🔍 搜索用户',
                 'selectCurrentService' => '📍 选择当前服务',
                 'selectCustomName' => '👤 选择自定义名称',

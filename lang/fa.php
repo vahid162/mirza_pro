@@ -2445,7 +2445,6 @@ nowpayments.io
                 'resetVolumeAddTime' => 'ریست شدن حجم و اضافه شدن زمان',
                 'resetVolumeTime' => 'ریست حجم و زمان',
                 'searchOrder' => '🛍 جستجو سفارش',
-                'searchUser' => '👁‍🗨 جستجو کاربر',
                 'searchUserBtn' => '🔍 جستجو کاربر',
                 'selectCurrentService' => '📍 انتخاب سرویس فعلی',
                 'selectCustomName' => '👤 انتخاب نام دلخواه',
