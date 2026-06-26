@@ -1650,7 +1650,6 @@ function publickey()
         'preshared_key' => $presharedKey
     ];
 }
-
 function languagechange($path_dir = null, string $lang = 'fa')
 {
     global $from_id;
@@ -1687,6 +1686,62 @@ function bottext_apply_overrides(array &$base, $lang)
                 $base[$group][$k] = $v;
         }
     }
+}
+function generateAuthStr($length = 10)
+{
+    $characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    return substr(str_shuffle(str_repeat($characters, ceil($length / strlen($characters)))), 0, $length);
+}
+function createqrcode($contents)
+{
+    $builder = new Builder(
+        writer: new PngWriter(),
+        writerOptions: [],
+        data: $contents,
+        encoding: new Encoding('UTF-8'),
+        errorCorrectionLevel: ErrorCorrectionLevel::High,
+        size: 500,
+        margin: 10,
+    );
+
+    $result = $builder->build();
+    return $result;
+}
+function sanitize_recursive(array $data): array
+{
+    $sanitized_data = [];
+    foreach ($data as $key => $value) {
+        $sanitized_key = htmlspecialchars($key, ENT_QUOTES, 'UTF-8');
+        if (is_array($value)) {
+            $sanitized_data[$sanitized_key] = sanitize_recursive($value);
+        } elseif (is_string($value)) {
+            $sanitized_data[$sanitized_key] = htmlspecialchars($value, ENT_QUOTES, 'UTF-8');
+        } elseif (is_int($value)) {
+            $sanitized_data[$sanitized_key] = filter_var($value, FILTER_SANITIZE_NUMBER_INT);
+        } elseif (is_float($value)) {
+            $sanitized_data[$sanitized_key] = filter_var($value, FILTER_SANITIZE_NUMBER_FLOAT, FILTER_FLAG_ALLOW_FRACTION);
+        } elseif (is_bool($value) || is_null($value)) {
+            $sanitized_data[$sanitized_key] = $value;
+        } else {
+            $sanitized_data[$sanitized_key] = $value;
+        }
+    }
+    return $sanitized_data;
+}
+
+function check_active_btn($keyboard, $text_var)
+{
+    $trace_keyboard = json_decode($keyboard, true)['keyboard'];
+    $status = false;
+    foreach ($trace_keyboard as $key => $callback_set) {
+        foreach ($callback_set as $keyboard_key => $keyboard) {
+            if ($keyboard['text'] == $text_var) {
+                $status = true;
+                break;
+            }
+        }
+    }
+    return $status;
 }
 function deleteFolder($folderPath)
 {
@@ -1871,33 +1926,4 @@ function parseConfigs($input)
     }
 
     return $configs;
-}
-function check_active_btn($keyboard, $text_var)
-{
-    $trace_keyboard = json_decode($keyboard, true)['keyboard'];
-    $status = false;
-    foreach ($trace_keyboard as $key => $callback_set) {
-        foreach ($callback_set as $keyboard_key => $keyboard) {
-            if ($keyboard['text'] == $text_var) {
-                $status = true;
-                break;
-            }
-        }
-    }
-    return $status;
-}
-function createqrcode($contents)
-{
-    $builder = new Builder(
-        writer: new PngWriter(),
-        writerOptions: [],
-        data: $contents,
-        encoding: new Encoding('UTF-8'),
-        errorCorrectionLevel: ErrorCorrectionLevel::High,
-        size: 500,
-        margin: 10,
-    );
-
-    $result = $builder->build();
-    return $result;
 }
