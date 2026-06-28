@@ -225,7 +225,7 @@ if ($text == "📞 تنظیم نام کاربری پشتیبانی") {
     update("botsaz", "admin_ids", json_encode($admin_ids), "bot_token", $ApiToken);
     sendmessage($from_id, "✅ ادمین با موفقیت حذف گردید", null, 'HTML');
 } elseif ($text == "🔍 جستجو کاربر") {
-    sendmessage($from_id, $textbotlang['Admin']['ManageUser']['GetIdUserunblock'], $backadmin, 'HTML');
+    sendmessage($from_id, $textbotlang['Admin']['manageUser']['getIdUserUnblock'], $backadmin, 'HTML');
     step('show_info', $from_id);
 } elseif ($user['step'] == "show_info" || strpos($text, "/user ") !== false) {
     if (explode(" ", $text)[0] == "/user") {
@@ -268,8 +268,8 @@ if ($text == "📞 تنظیم نام کاربری پشتیبانی") {
     }
     $user = select("user", "*", "id", $id_user, "select");
     $roll_Status = [
-        '1' => $textbotlang['Admin']['ManageUser']['Acceptedphone'],
-        '0' => $textbotlang['Admin']['ManageUser']['Failedphone'],
+        '1' => $textbotlang['Admin']['manageUser']['acceptedPhone'],
+        '0' => $textbotlang['Admin']['manageUser']['failedPhone'],
     ][$user['roll_Status']];
     if ($subbuyuser['SUM(price_product)'] == null)
         $subbuyuser['SUM(price_product)'] = 0;
@@ -357,7 +357,7 @@ if ($text == "📞 تنظیم نام کاربری پشتیبانی") {
 } elseif (preg_match('/addbalanceuser_(\w+)/', $datain, $dataget)) {
     $iduser = $dataget[1];
     update("user", "Processing_value", $iduser, "id", $from_id);
-    sendmessage($from_id, $textbotlang['Admin']['ManageUser']['addbalanceuserdec'], $backadmin, 'html');
+    sendmessage($from_id, $textbotlang['Admin']['manageUser']['addBalanceUserDesc'], $backadmin, 'html');
     step('addbalanceusercurrent', $from_id);
 } elseif ($user['step'] == "addbalanceusercurrent") {
     if (!ctype_digit($text)) {
@@ -387,7 +387,7 @@ if ($text == "📞 تنظیم نام کاربری پشتیبانی") {
 } elseif (preg_match('/lowbalanceuser_(\w+)/', $datain, $dataget)) {
     $iduser = $dataget[1];
     update("user", "Processing_value", $iduser, "id", $from_id);
-    sendmessage($from_id, $textbotlang['Admin']['ManageUser']['lowbalanceuserdec'], $backadmin, 'html');
+    sendmessage($from_id, $textbotlang['Admin']['manageUser']['lowBalanceUserDesc'], $backadmin, 'html');
     step('addbalanceuser', $from_id);
 } elseif ($user['step'] == "addbalanceuser") {
     if (!ctype_digit($text)) {
@@ -418,11 +418,11 @@ if ($text == "📞 تنظیم نام کاربری پشتیبانی") {
     $Balance_user_afters = number_format(select("user", "*", "id", $user['Processing_value'], "select")['Balance']);
 } elseif ($text == "📊 آمار ربات") {
     $statistics = select("user", "*", "bottype", $ApiToken, "count");
-    $stmt2 = $pdo->prepare("SELECT COUNT( DISTINCT id_user) as count FROM `invoice` WHERE name_product = 'سرویس تست' AND  bottype = :mp1");
-    $stmt2->execute([':mp1' => $ApiToken]);
+    $stmt2 = $pdo->prepare("SELECT COUNT( DISTINCT id_user) as count FROM `invoice` WHERE name_product = 'سرویس تست' AND  bottype = '$ApiToken'");
+    $stmt2->execute();
     $statisticsorder = $stmt2->fetch(PDO::FETCH_ASSOC)['count'];
-    $stmt = $pdo->prepare("SELECT * FROM invoice WHERE name_product = 'سرویس تست' AND bottype = :mp2");
-    $stmt->execute([':mp2' => $ApiToken]);
+    $stmt = $pdo->prepare("SELECT * FROM invoice WHERE name_product = 'سرویس تست' AND bottype = '$ApiToken'");
+    $stmt->execute();
     $count_usertest = $stmt->rowCount();
     $sql1 = "SELECT COUNT(*) AS invoice_count FROM invoice WHERE (status = 'active' OR status = 'end_of_time' OR status = 'end_of_volume' OR status = 'sendedwarn' OR status = 'send_on_hold') AND name_product != 'سرویس تست' AND bottype = '$ApiToken'";
     $stmt1 = $pdo->query($sql1);
