@@ -707,7 +707,7 @@ if ($text == "📞 تنظیم نام کاربری پشتیبانی") {
     sendmessage($from_id, $textupdate, $Response, 'HTML');
 } elseif ($datain == "update") {
     $source = dirname(__DIR__) . "/update";
-    $getversionnow = file_get_contents('../vpnbot/update/version');
+    $getversionnow = file_get_contents($source . '/version');
 
     if ($getversionnow == $version) {
         sendmessage($from_id, "کاربر عزیز نسخه جدیدی منتشر نشده است", null, 'HTML');

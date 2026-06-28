@@ -695,4 +695,41 @@ if ($text == "📞 تنظیم نام کاربری پشتیبانی") {
     file_put_contents('product_name.json', json_encode($productlist));
     step("home", $from_id);
     sendmessage($from_id, "✅ نام با موفقیت تنظیم گردید.", $keyboardprice, 'HTML');
+} elseif ($text == "🆕 آپدیت ربات") {
+    $Response = json_encode([
+        'inline_keyboard' => [
+            [
+                ['text' => "نسخه پایدار", 'callback_data' => 'update'],
+            ],
+        ]
+    ]);
+    $textupdate = "📍 مدیر عزیز  برای آپدیت گزینه زیر را انتخاب نمایید";
+    sendmessage($from_id, $textupdate, $Response, 'HTML');
+} elseif ($datain == "update") {
+    $source = dirname(__DIR__) . "/update";
+    $getversionnow = file_get_contents($source . '/version');
+
+    if ($getversionnow == $version) {
+        sendmessage($from_id, "کاربر عزیز نسخه جدیدی منتشر نشده است", null, 'HTML');
+        return;
+    }
+
+    sendmessage($from_id, "✅ ربات شما با موفقیت از نسخه  $version به نسخه $getversionnow آپدیت گردید.", null, 'HTML');
+
+    $old_text = null;
+    $has_old_text = false;
+
+    if (is_file('text.json')) {
+        $old_text = json_decode(file_get_contents('text.json'), true);
+        $has_old_text = true;
+    }
+
+    $destination = getcwd();
+    $command = "cp -r $source/* $destination 2>&1";
+    $output = shell_exec($command);
+    if ($has_old_text) {
+        $new_text = json_decode(file_get_contents('text.json'), true);
+        $merged = array_replace_recursive($new_text, $old_text);
+        file_put_contents('text.json', json_encode($merged, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT));
+    }
 }
