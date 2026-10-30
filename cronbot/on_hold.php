@@ -13,8 +13,21 @@ $setting = select("setting", "*");
 // buy service 
 $stmt = $pdo->prepare("SELECT * FROM marzban_panel WHERE type = 'marzban'  ORDER BY RAND() LIMIT 25");
 $stmt->execute();
+$failedPanels = 0;
         while ($panel = $stmt->fetch(PDO::FETCH_ASSOC)) {
-        $users = getusers($panel['name_panel'],"on_hold")['users'];
+        try {
+            $response = getusers($panel['name_panel'], "on_hold");
+        } catch (Throwable $e) {
+            $response = ['error' => 'request_exception'];
+        }
+        if (!is_array($response) || !is_array($response['users'] ?? null)) {
+            $failedPanels++;
+            error_log(sprintf('on_hold: panel_id=%d error=%s http_status=%d curl_errno=%d',
+                (int) ($panel['id'] ?? 0), $response['error'] ?? 'invalid_users_response',
+                (int) ($response['http_status'] ?? 0), (int) ($response['curl_errno'] ?? 0)));
+            continue;
+        }
+        $users = $response['users'];
         foreach($users as $user){
         $invoice = select("invoice","*","username",$user['username'],"select");
         if($invoice == false )continue;
@@ -39,4 +52,7 @@ $stmt->execute();
         }
         }
 }
+}
+if ($failedPanels > 0) {
+    throw new RuntimeException("on_hold: $failedPanels panel scan(s) failed; see error_log");
 }

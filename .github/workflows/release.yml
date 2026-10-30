@@ -1,62 +1,71 @@
-name: Release hosting bundle
+name: Test and release Mirza Pro
 
 on:
   push:
-    tags:
-      - '*'
+    branches: [main]
+    paths: [version]
+  pull_request:
+    branches: [main]
   workflow_dispatch:
-    inputs:
-      tag:
-        description: Existing tag to build the hosting bundle for
-        required: true
 
 permissions:
-  contents: write
+  contents: read
+
+concurrency:
+  group: mirza-pro-release
+  cancel-in-progress: false
 
 jobs:
-  bundle:
+  validate:
     runs-on: ubuntu-latest
     steps:
-      - name: Resolve tag
-        id: tag
-        run: echo "name=${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref_name }}" >> "$GITHUB_OUTPUT"
-
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ steps.tag.outputs.name }}
-
-      - name: Setup PHP
+      - uses: actions/checkout@v4
+      - name: Set up PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: '8.2'
-          extensions: curl, mbstring, zip, gd, dom, simplexml, xmlwriter, xmlreader, fileinfo, iconv, bcmath
+          php-version: '8.5'
+          extensions: curl, mbstring, zip, gd, dom, simplexml, xmlwriter, xmlreader, fileinfo, iconv, pdo_sqlite, bcmath
           tools: composer
-
-      - name: Install dependencies
+      - name: Install locked dependencies
         run: composer install --no-dev --no-interaction --no-progress --optimize-autoloader --classmap-authoritative
-
-      - name: Verify autoloader
-        run: test -f vendor/autoload.php
-
-      - name: Build bundle
-        id: bundle
-        env:
-          TAG: ${{ steps.tag.outputs.name }}
+      - name: Run offline regression tests
+        run: php tests/run.php
+      - name: Check browser module syntax
         run: |
-          FILE="mirzabot-host-${TAG}.zip"
-          zip -r -q "../${FILE}" . -x '.git/*' '.github/*' 'graphify-out/*' '.gitignore' 'install.sh'
+          node --input-type=module --check < app/assets/index-C-2a0Dur.js
+          node --input-type=module --check < panel/js/sort_keyboard.js
+  release:
+    needs: validate
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    permissions:
+      contents: write
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.5'
+          extensions: curl, mbstring, zip, gd, dom, simplexml, xmlwriter, xmlreader, fileinfo, iconv, pdo_sqlite, bcmath
+          tools: composer
+      - name: Install locked dependencies
+        run: composer install --no-dev --no-interaction --no-progress --optimize-autoloader --classmap-authoritative
+      - name: Build hosting bundle
+        id: bundle
+        shell: bash
+        run: |
+          VERSION="$(tr -d '\r\n' < version)"
+          [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]
+          FILE="mirza-pro-host-${VERSION}.zip"
+          zip -r -q "../${FILE}" . -x '.git/*' '.github/*' 'tests/*' '.gitignore' 'install.sh'
           mv "../${FILE}" .
-          echo "file=${FILE}" >> "$GITHUB_OUTPUT"
-          unzip -l "${FILE}" | tail -1
-
-      - name: Attach bundle to release
+          sha256sum "$FILE" > "${FILE}.sha256"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "file=$FILE" >> "$GITHUB_OUTPUT"
+      - name: Publish fork release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          TAG: ${{ steps.tag.outputs.name }}
+          GH_REPO: ${{ github.repository }}
+          VERSION: ${{ steps.bundle.outputs.version }}
           FILE: ${{ steps.bundle.outputs.file }}
-        run: |
-          if ! gh release view "$TAG" >/dev/null 2>&1; then
-            gh release create "$TAG" --title "$TAG" --generate-notes
-          fi
-          gh release upload "$TAG" "$FILE" --clobber
+        run: gh release create "$VERSION" "$FILE" "${FILE}.sha256" --target "$GITHUB_SHA" --title "Mirza Pro $VERSION" --notes-file RELEASE_NOTES.md --latest

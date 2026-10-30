@@ -892,8 +892,6 @@ function cubepayCardDetailsText($payment)
 function formatBytes($bytes, $precision = 2): string
 {
     global $textbotlang;
-    $base = log($bytes, 1024);
-    $power = $bytes > 0 ? floor($base) : 0;
     $suffixes = [
         $textbotlang['common']['units']['byte'],
         $textbotlang['common']['units']['kilobyte'],
@@ -901,7 +899,12 @@ function formatBytes($bytes, $precision = 2): string
         $textbotlang['common']['units']['gigabyteAlt'],
         $textbotlang['common']['units']['terabyte'],
     ];
-    return round(pow(1024, $base - $power), $precision) . ' ' . $suffixes[$power];
+    $bytes = is_numeric($bytes) ? (float) $bytes : 0;
+    if (!is_finite($bytes) || $bytes <= 0) {
+        return '0 ' . $suffixes[0];
+    }
+    $power = max(0, min(count($suffixes) - 1, (int) floor(log($bytes, 1024))));
+    return round($bytes / pow(1024, $power), $precision) . ' ' . $suffixes[$power];
 }
 function generateUsername($from_id, $Metode, $username, $randomString, $text, $namecustome, $usernamecustom)
 {
@@ -994,9 +997,19 @@ function addBalance($userId, $amount)
 function cancelPendingGatewayOrders($id_user): void
 {
     global $pdo;
-    $stmt = $pdo->prepare("DELETE FROM invoice WHERE id_user = ? AND Status = 'unpaid' AND NOT EXISTS (SELECT 1 FROM Payment_report pr WHERE pr.id_order = invoice.id_payment AND pr.payment_Status IN ('Unpaid', 'waiting'))");
+    // Old payloads may match several attempts; retain ambiguous payment history instead of deleting it.
+    $stmt = $pdo->prepare("DELETE FROM invoice WHERE id_user = ? AND Status = 'unpaid' AND NOT EXISTS (
+        SELECT 1 FROM Payment_report pr WHERE pr.id_order = invoice.id_payment
+        OR (pr.id_user = invoice.id_user AND pr.id_invoice LIKE 'getconfigafterpay|%'
+            AND SUBSTRING_INDEX(pr.id_invoice, '|', -1) = invoice.username)
+    )");
     $stmt->execute([$id_user]);
-    $stmt = $pdo->prepare("DELETE FROM service_other WHERE id_user = ? AND status = 'unpaid' AND NOT EXISTS (SELECT 1 FROM Payment_report pr WHERE pr.id_order = service_other.id_payment AND pr.payment_Status IN ('Unpaid', 'waiting'))");
+    $stmt = $pdo->prepare("DELETE FROM service_other WHERE id_user = ? AND status = 'unpaid' AND NOT EXISTS (
+        SELECT 1 FROM Payment_report pr WHERE pr.id_order = service_other.id_payment
+        OR (pr.id_user = service_other.id_user
+            AND (pr.id_invoice LIKE 'getextenduser|%' OR pr.id_invoice LIKE 'getextravolumeuser|%' OR pr.id_invoice LIKE 'getextratimeuser|%')
+            AND SUBSTRING_INDEX(SUBSTRING_INDEX(pr.id_invoice, '|', -1), '%', 1) = service_other.username)
+    )");
     $stmt->execute([$id_user]);
     clearSelectCache('invoice');
     clearSelectCache('service_other');
@@ -2439,10 +2452,11 @@ function deleteFolder($folderPath)
 }
 function isBase64($string)
 {
-    if (base64_encode(base64_decode($string, true)) === $string) {
-        return true;
+    if (!is_string($string)) {
+        return false;
     }
-    return false;
+    $decoded = base64_decode($string, true);
+    return $decoded !== false && base64_encode($decoded) === $string;
 }
 function sendMessageService($panel_info, $config, $sub_link, $username_service, $reply_markup, $caption, $invoice_id, $user_id = null, $image = 'images.jpg', $wireguard = [])
 {

@@ -124,14 +124,20 @@ function Get_Node($location, $Nodeid)
 
 function getusers($location, $status)
 {
+    $failure = static fn($error, $httpStatus = 0, $curlErrno = 0) => [
+        'error' => $error,
+        'http_status' => (int) $httpStatus,
+        'curl_errno' => (int) $curlErrno,
+    ];
     $marzban_list_get = select("marzban_panel", "*", "name_panel", $location, "select");
-    $Check_token = token_panel($marzban_list_get['code_panel']);
-    if (!empty($Check_token['error'])) {
-        return $Check_token;
+    if (!is_array($marzban_list_get)) {
+        return $failure('panel_not_found');
     }
-    $url = $marzban_list_get['url_panel'] . '/api/users?status=' . $status;
-    if (!isset($Check_token['access_token']))
-        return;
+    $Check_token = token_panel($marzban_list_get['code_panel']);
+    if (!is_array($Check_token) || !empty($Check_token['error']) || !is_string($Check_token['access_token'] ?? null) || $Check_token['access_token'] === '') {
+        return $failure('authentication_failed');
+    }
+    $url = $marzban_list_get['url_panel'] . '/api/users?status=' . rawurlencode($status);
     $header_value = 'Bearer ';
 
     $ch = curl_init();
@@ -145,7 +151,23 @@ function getusers($location, $status)
     ));
 
     $output = curl_exec($ch);
+    $curlErrno = curl_errno($ch);
+    $httpStatus = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    if ($output === false || $curlErrno !== 0) {
+        return $failure('curl_error', $httpStatus, $curlErrno);
+    }
+    if ($httpStatus < 200 || $httpStatus >= 300) {
+        return $failure('http_error', $httpStatus, $curlErrno);
+    }
     $data_useer = json_decode($output, true);
+    if (!is_array($data_useer) || !is_array($data_useer['users'] ?? null)) {
+        return $failure('invalid_users_response', $httpStatus, $curlErrno);
+    }
+    foreach ($data_useer['users'] as $user) {
+        if (!is_array($user) || !is_string($user['username'] ?? null) || $user['username'] === '' || !is_string($user['status'] ?? null)) {
+            return $failure('invalid_users_response', $httpStatus, $curlErrno);
+        }
+    }
     return $data_useer;
 }
 #-----------------------------#
