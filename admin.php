@@ -5652,11 +5652,9 @@ if ($datain == "settimecornremove" && $adminrulecheck['rule'] == "administrator"
     [$cronText, $cronKeyboard] = cronStatusMenu();
     sendmessage($from_id, $cronText, $cronKeyboard, 'HTML');
 } elseif (in_array($datain, ["cronstatus_refresh", "cronstatus_fix"]) && $adminrulecheck['rule'] == "administrator") {
-    if ($datain == "cronstatus_fix") {
-        activecron();
-    }
+    $cronFixed = $datain == "cronstatus_fix" && activecron();
     [$cronText, $cronKeyboard] = cronStatusMenu();
-    Editmessagetext($from_id, $message_id, ($datain == "cronstatus_fix" ? $textbotlang['Admin']['cronHealth']['fixed'] . "\n\n" : "") . $cronText, $cronKeyboard);
+    Editmessagetext($from_id, $message_id, ($cronFixed ? $textbotlang['Admin']['cronHealth']['fixed'] . "\n\n" : "") . $cronText, $cronKeyboard);
 } elseif ($text == $textbotlang['keyboard']['financial'] && $adminrulecheck['rule'] == "administrator") {
     $swapWalletStatus = getPaySettingValue('statusSwapWallet', 'offSwapinoBot');
     if ($swapWalletStatus != "onSwapinoBot" && $swapWalletStatus != "offSwapinoBot") {
