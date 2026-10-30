@@ -869,6 +869,11 @@ if ($text == "/start" || $datain == "start" || $text == "start") {
         return;
     }
     $marzban = select("marzban_panel", "*", "name_panel", $nameloc['Service_location'], "select");
+    if (!isset($marzban['name_panel'])) {
+        sendmessage($from_id, $textbotlang['users']['status']['infoUnavailable'], $keyboard, 'html');
+        step('home', $from_id);
+        return;
+    }
     if ($marzban['name_panel'] != null) {
         update("user", "Processing_value_four", $marzban['name_panel'], "id", $from_id);
     }
