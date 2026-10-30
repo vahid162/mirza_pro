@@ -42,13 +42,14 @@ function mirza_cron_stagger_seconds(string $seed = ''): int
 function mirza_cron_php_binary(): string
 {
     $php = PHP_BINDIR . '/php';
-    if (is_executable($php)) {
+    // Executable discovery is optional when open_basedir excludes system paths.
+    if (@is_executable($php)) {
         return $php;
     }
-    if (defined('PHP_BINARY') && PHP_BINARY !== '' && is_executable(PHP_BINARY)) {
+    if (PHP_SAPI === 'cli' && defined('PHP_BINARY') && PHP_BINARY !== '' && @is_executable(PHP_BINARY)) {
         return PHP_BINARY;
     }
-    if (is_executable('/usr/bin/php')) {
+    if (@is_executable('/usr/bin/php')) {
         return '/usr/bin/php';
     }
 

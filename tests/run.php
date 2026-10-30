@@ -4,7 +4,7 @@ if (PHP_SAPI !== 'cli') {
     exit(1);
 }
 $failed = 0;
-foreach (['runtime-warnings.php', 'panel-response.php', 'subpath.php'] as $test) {
+foreach (['runtime-warnings.php', 'panel-response.php', 'subpath.php', 'cron-registration.php'] as $test) {
     $process = proc_open([PHP_BINARY, __DIR__ . '/' . $test], [0 => ['pipe', 'r'], 1 => STDOUT, 2 => STDERR], $pipes);
     if (!is_resource($process)) {
         throw new RuntimeException('Cannot start regression test');

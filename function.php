@@ -1921,12 +1921,27 @@ function removeCron($pattern)
     return true;
 }
 
-function activecron()
+function activecron(): bool
 {
     global $domainhosts;
 
     if (!is_string($domainhosts) || $domainhosts === '') {
-        return;
+        return false;
+    }
+
+    $cronStatus = json_decode((string) @file_get_contents(__DIR__ . '/storage/cron_status.json'), true);
+    $lastRun = $cronStatus['dispatcher'] ?? null;
+    $now = time();
+    // A working dispatcher may be managed by the server outside the web user's crontab.
+    if (is_int($lastRun) && $lastRun <= $now && $now - $lastRun <= 180
+        && ($cronStatus['pdo_mysql'] ?? false) === true
+        && is_string($cronStatus['php_cli'] ?? null)
+        && version_compare($cronStatus['php_cli'], '8.5', '>=')) {
+        return true;
+    }
+
+    if (!isShellExecAvailable()) {
+        return false;
     }
 
     require_once __DIR__ . '/cronbot/jobs.php';
@@ -1934,7 +1949,7 @@ function activecron()
     removeCron("https://$domainhosts/cronbot/");
     removeCron(__DIR__ . '/cronbot/');
 
-    addCronIfNotExists(mirza_cron_dispatcher_command($domainhosts));
+    return addCronIfNotExists(mirza_cron_dispatcher_command($domainhosts));
 }
 function createInvoice($amount)
 {
