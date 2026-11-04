@@ -742,6 +742,25 @@ function invoiceBelongsToUser($invoice, $userId)
 {
     return is_array($invoice) && isset($invoice['id_user']) && (string) $invoice['id_user'] === (string) $userId;
 }
+
+function decodeRenewalConfirmation($value): ?array
+{
+    if (!is_string($value)) {
+        return null;
+    }
+    $data = json_decode($value, true);
+    if (!is_array($data)) {
+        return null;
+    }
+    foreach (['id_invoice', 'code_product'] as $key) {
+        $identifier = $data[$key] ?? null;
+        if ((!is_string($identifier) && !is_int($identifier)) || trim((string) $identifier) === '') {
+            return null;
+        }
+    }
+    return $data;
+}
+
 function cubepayFeeValue()
 {
     $raw = select("PaySetting", "ValuePay", "NamePay", "feeternado", "select")['ValuePay'] ?? '0';

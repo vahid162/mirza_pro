@@ -1786,16 +1786,25 @@ if ($text == "/start" || $datain == "start" || $text == "start") {
     update("user", "Processing_value_four", $parametrsendvalue, "id", $from_id);
     step("home", $from_id);
 } elseif ($datain == "confirmserivce" || $datain == "confirmserdiscount") {
-    Editmessagetext($from_id, $message_id, $text_inline, json_encode(['inline_keyboard' => []]));
-    $partsdic = explode("_", $user['Processing_value_four']);
-    $userdata = json_decode($user['Processing_value'], true);
+    $userdata = decodeRenewalConfirmation($user['Processing_value'] ?? null);
+    $discountContext = $user['Processing_value_four'] ?? '';
+    $partsdic = explode("_", is_string($discountContext) ? $discountContext : '');
+    if ($userdata === null || ($datain == "confirmserdiscount"
+        && ($partsdic[0] !== 'dis' || !isset($partsdic[1]) || trim($partsdic[1]) === ''))) {
+        sendmessage($from_id, $textbotlang['users']['extend']['restartError'], $keyboard, 'HTML');
+        return;
+    }
     $id_invoice = $userdata['id_invoice'];
     $nameloc = select("invoice", "*", "id_invoice", $id_invoice, "select");
-    if ($nameloc == false) {
-        sendmessage($from_id, $textbotlang['users']['extend']['error'], null, 'HTML');
+    if (!invoiceBelongsToUser($nameloc, $from_id)) {
+        sendmessage($from_id, $textbotlang['users']['extend']['restartError'], $keyboard, 'HTML');
         return;
     }
     $marzban_list_get = select("marzban_panel", "*", "name_panel", $nameloc['Service_location'], "select");
+    if (!is_array($marzban_list_get)) {
+        sendmessage($from_id, $textbotlang['users']['extend']['restartError'], $keyboard, 'HTML');
+        return;
+    }
     if ($marzban_list_get['status_extend'] == "off_extend") {
         sendmessage($from_id, $textbotlang['users']['extend']['notSupportedPanel'], null, 'html');
         return;
@@ -1806,9 +1815,20 @@ if ($text == "/start" || $datain == "start" || $text == "start") {
     $customtimevalueprice = $eextraprice[$user['agent']];
     $randomString = bin2hex(random_bytes(2));
     if ($nameloc['name_product'] == $textbotlang['users']['customSellVolume']['btnVolume'] || $nameloc['name_product'] == $textbotlang['users']['customSellVolume']['btnService']) {
+        foreach (['time', 'data_limit'] as $field) {
+            $value = $userdata[$field] ?? null;
+            if (!is_numeric($value) || !is_finite((float) $value) || $value < 0) {
+                sendmessage($from_id, $textbotlang['users']['extend']['restartError'], $keyboard, 'HTML');
+                return;
+            }
+        }
         $prodcut['code_product'] = "custom_volume";
         $prodcut['name_product'] = $nameloc['name_product'];
         $prodcut['price_product'] = ($userdata['data_limit'] * $custompricevalue) + ($userdata['time'] * $customtimevalueprice);
+        if (!is_finite((float) $prodcut['price_product'])) {
+            sendmessage($from_id, $textbotlang['users']['extend']['restartError'], $keyboard, 'HTML');
+            return;
+        }
         $prodcut['Service_time'] = $userdata['time'];
         $prodcut['Volume_constraint'] = $userdata['data_limit'];
         $prodcut['inbounds'] = $marzban_list_get['inboundid'];
@@ -1821,11 +1841,12 @@ if ($text == "/start" || $datain == "start" || $text == "start") {
         ]);
         $prodcut = $stmt->fetch(PDO::FETCH_ASSOC);
     }
-    $pricelastextend = $prodcut['price_product'];
     if ($prodcut == false || !in_array($nameloc['Status'], ['active', 'end_of_time', 'end_of_volume', 'sendedwarn', 'send_on_hold'])) {
         sendmessage($from_id, $textbotlang['users']['extend']['error'], null, 'HTML');
         return;
     }
+    $pricelastextend = $prodcut['price_product'];
+    Editmessagetext($from_id, $message_id, $text_inline, json_encode(['inline_keyboard' => []]));
     if ($datain == "confirmserdiscount") {
         $stmt = $pdo->prepare("SELECT * FROM DiscountSell WHERE (code_product = :code_product OR code_product = 'all') AND (code_panel = :code_panel OR code_panel = '/all') AND codeDiscount = :codeDiscount AND (agent = :agent OR agent = 'allusers') AND (type = 'all' OR type = 'extend')");
         $stmt->execute([
