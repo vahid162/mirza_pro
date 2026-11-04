@@ -1,13 +1,15 @@
-# Mirza Pro 0.9.2
+# Mirza Pro 0.9.3
 
-This release fixes cron auto-registration warnings in restricted PHP web environments while preserving an existing CLI scheduler.
+This release handles expired or invalid service-renewal confirmations without PHP warnings or changes to an unrelated user flow.
 
-- Recognize a recent dispatcher heartbeat running PHP 8.5 or newer with PDO MySQL, and leave the existing cron registration alone when opening the admin menu or checking cron status.
-- Skip cron registration when `shell_exec` is unavailable, before probing for system executables or attempting cron cleanup.
-- Treat PHP executable paths blocked by `open_basedir` as unavailable without emitting warnings. Never use the PHP-FPM executable as a CLI fallback.
-- Report cron repair success only when a healthy dispatcher exists or registration succeeds. A stopped dispatcher still shows the existing manual setup instructions.
-- Retain the runtime, payment-history preservation and subdirectory compatibility fixes from 0.9.1.
+- Validate saved renewal data before reading its invoice and product identifiers. A scalar such as `0`, malformed JSON or missing fields now produces the existing restart-selection message.
+- Confirm invoice ownership and panel availability before continuing. Reject missing products and invalid custom duration/traffic values before price or billing work.
+- Validate saved discount context before using it. Keep normal, custom and discounted renewal price calculations unchanged for valid requests.
+- Reject invalid confirmations without resetting the user's current step or saved context. Invalid callbacks do not reach panel calls or billing.
+- Retain the cron, runtime, payment-history preservation and subdirectory compatibility fixes from earlier fork releases.
 
-Regression tests exercise the real scheduler helpers with shell execution disabled and restricted filesystem access, healthy and invalid heartbeat files, supported CLI registration, and the admin repair response. No database or real crontab is loaded by these tests.
+Regression coverage exercises the actual confirmation-handler source through the boundary before panel access and billing. It covers expired state, invalid identifiers, missing or foreign invoices, missing panels/products, invalid custom values, discount context and valid prices. Confirmation buttons retain the existing generic callbacks and use the current saved renewal context.
+
+Validation also passed against a fresh isolated MySQL copy with network access disabled and a test account restricted to that copy. Wallets, payments, history and user context stayed unchanged; all copied rows and schema definitions matched after transaction rollback. The active bot, production database and CLI cron were not modified.
 
 Download the hosting ZIP, which includes the locked Composer dependencies, and verify its SHA-256 file. PHP 8.5.12 or newer remains required. No database migration or configuration change is required by this patch. Preserve your existing `config.php` and runtime storage when deploying; this release does not install itself or alter any running bot, CLI cron or website setting.
